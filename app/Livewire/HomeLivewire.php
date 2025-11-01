@@ -26,11 +26,11 @@ class HomeLivewire extends Component
 
 // Add Cashflow
     public $addCashflowTitle;
-    public $addCashflowTipe;     // <--- TAMBAHKAN INI
+    public $addCashflowTipe = 'pemasukan';     // <--- TAMBAHKAN INI
     public $addCashflowNominal;  // <--- TAMBAHKAN INI
     public $addCashflowDescription;
 
-public function addCashflow()
+    public function addCashflow()
     {
         $this->validate([
             'addCashflowTitle' => 'required|string|max:255',
@@ -56,23 +56,6 @@ public function addCashflow()
             'addCashflowNominal',  // <--- TAMBAHKAN DI RESET
             'addCashflowDescription'
         ]);
-
-        // Tutup modal
-        $this->dispatch('closeModal', id: 'addCashflowModal');
-    }
-
-        // Simpan cashflow ke database
-        Cashflow::create([
-            'title' => $this->addCashflowTitle,
-            'tipe' => $this->addCashflowTipe, // pemasukan / pengeluaran
-            'nominal' => $this->addCashflowNominal,
-            'description' => $this->addCashflowDescription,
-            'user_id' => auth()->id(),
-        ]);
-
-
-        // Reset the form
-        $this->reset(['addCashflowTitle', 'addCashflowDescription']);
 
         // Tutup modal
         $this->dispatch('closeModal', id: 'addCashflowModal');
@@ -191,8 +174,6 @@ public function addCashflow()
     $this->reset([
         'deleteCashflowId',
         'deleteCashflowTitle',
-        'deleteCashflowTipe',
-        'deleteCashflowNominal',
         'deleteCashflowConfirmTitle',
     ]);
 

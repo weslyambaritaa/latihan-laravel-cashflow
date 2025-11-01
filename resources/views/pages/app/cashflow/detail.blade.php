@@ -1,4 +1,4 @@
 @extends('layouts.app')
 @section('content')
-    @livewire('cashflow-detail-livewire')
+        @livewire('cashflow-livewire', ['cashflow' => $cashflow])
 @endsection

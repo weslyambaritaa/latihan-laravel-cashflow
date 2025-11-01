@@ -1,20 +1,37 @@
 <?php
 
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\HomeController;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Route; // <-- INI PERBAIKANNYA
+use App\Models\Cashflow;
+use Illuminate\Support\Facades\Auth; // <-- Pastikan ini juga pakai backslash
 
-Route::group(['prefix' => 'auth'], function () {
-    Route::get('/login', [AuthController::class, 'login'])->name('auth.login');
-    Route::get('/register', [AuthController::class, 'register'])->name('auth.register');
-    Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+// Autentikasi
+Route::middleware('guest')->group(function () {
+    Route::get('/', fn () => redirect()->route('login'));
+    Route::get('/login', fn () => view('pages.auth.login'))->name('login');
+    Route::get('/register', fn () => view('pages.auth.register'))->name('register');
 });
 
-Route::group(['prefix' => 'app', 'middleware' => 'check.auth'], function () {
-    Route::get('/home', [HomeController::class, 'index'])->name('app.home');
-    Route::get('/cashflows/{cashflow_id}', [HomeController::class, 'cashflowDetail'])->name('app.cashflows.detail');
-});
+// Grup untuk semua yang sudah login
+Route::middleware('auth')->group(function () {
 
-Route::get('/', function () {
-    return redirect()->route('app.home');
+    // Grup Rute Aplikasi (URL: /app/...)
+    Route::prefix('app')->name('app.')->group(function () {
+        Route::get('/home', fn () => view('pages.app.home'))->name('home');
+
+        Route::get('/cashflow/{id}', function ($id) {
+            $cashflow = Cashflow::where('id', $id)
+                                ->where('user_id', auth()->id()) 
+                                ->firstOrFail(); 
+            return view('pages.app.cashflow.detail', compact('cashflow'));
+        })->name('cashflow.detail');
+    });
+
+    // Rute Logout (URL: /logout)
+    Route::post('/logout', function () {
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        return redirect('/login'); // Arahkan ke halaman login
+    })->name('logout');
+
 });

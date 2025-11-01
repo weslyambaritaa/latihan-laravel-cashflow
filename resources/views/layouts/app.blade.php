@@ -1,52 +1,52 @@
-<!doctype html>
-<html lang="id">
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-    {{-- Meta --}}
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    {{-- Icon --}}
-    <link rel="icon" href="/logo.png" type="image/x-icon" />
-
-    {{-- Judul --}}
-    <title>Laravel Todolist</title>
-
-    {{-- Styles --}}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Cashflow App</title>
+    <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css') }}">
     @livewireStyles
-    <link rel="stylesheet" href="/assets/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css">
 </head>
 
-<body class="bg-light">
-    <div class="container-fluid">
-        @yield('content')
-    </div>
+<body>
+    {{-- Navbar --}}
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ route('app.home') }}">
+                <img src="{{ asset('logo.png') }}" alt="Logo" width="30" height="30"
+                    class="d-inline-block align-text-top">
+                Cashflow
+            </a>
+            
+            {{-- PERUBAHAN DI SINI --}}
+            <div class="d-flex align-items-center">
+                <span class="navbar-text me-3">
+                    Welcome, {{ auth()->user()->name }}
+                </span>
+                
+                {{-- TAMBAHKAN FORMULIR LOGOUT INI --}}
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type"submit" class="btn btn-danger btn-sm">
+                        Logout
+                    </button>
+                </form>
+            </div>
+            {{-- AKHIR PERUBAHAN --}}
 
-    {{-- Scripts --}}
-    <script src="/assets/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener("livewire:initialized", () => {
-            Livewire.on("closeModal", (data) => {
-                const modal = bootstrap.Modal.getInstance(
-                    document.getElementById(data.id)
-                );
-                if (modal) {
-                    modal.hide();
-                }
-            });
+        </div>
+    </nav>
 
-            Livewire.on("showModal", (data) => {
-                const modal = bootstrap.Modal.getOrCreateInstance(
-                    document.getElementById(data.id)
-                );
-                if (modal) {
-                    modal.show();
-                }
-            });
-        });
-    </script>
+    {{-- Content --}}
+    <main class="py-4">
+        <div class="container">
+            @yield('content')
+        </div>
+    </main>
+
+    <script src="{{ asset('assets/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js') }}"></script>
     @livewireScripts
 </body>
 

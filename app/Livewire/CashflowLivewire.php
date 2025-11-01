@@ -8,32 +8,39 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-class CashflowDetailLivewire extends Component
+// 1. NAMA KELAS DIPERBAIKI (agar cocok dengan nama file 'CashflowLivewire.php')
+class CashflowLivewire extends Component
 {
     use WithFileUploads;
 
     public $cashflow;
     public $auth;
 
-    public function mount()
+    // 2. FUNGSI MOUNT DIPERBAIKI
+    // Ini akan secara otomatis menerima data $cashflow yang dikirim dari
+    // @livewire('cashflow-livewire', ['cashflow' => $cashflow])
+    public function mount(Cashflow $cashflow)
     {
         $this->auth = Auth::user();
+        $this->cashflow = $cashflow;
 
-        $cashflow_id = request()->route('cashflow_id');
-        $targetCashflow = Cashflow::where('id', $cashflow_id)->first();
-        if (!$targetCashflow) {
+        // 3. Pengecekan keamanan (memastikan ini milik user)
+        if ($this->cashflow->user_id !== $this->auth->id) {
+            // Jika bukan pemilik, tendang ke halaman home
             return redirect()->route('app.home');
         }
-
-        $this->cashflow = $targetCashflow;
     }
 
+    // 4. FUNGSI RENDER DIPERBAIKI
     public function render()
     {
-        return view('livewire.cashflow-detail-livewire');
+        // Nama view harus 'livewire.cashflow-livewire'
+        // agar cocok dengan file:
+        // resources/views/livewire/cashflow-livewire.blade.php
+        return view('livewire.cashflow-livewire');
     }
 
-    // Ubah Cover Cashflow
+    // --- (Logika Upload Cover Anda - Ini sudah terlihat benar) ---
     public $editCoverCashflowFile;
 
     public function editCoverCashflow()

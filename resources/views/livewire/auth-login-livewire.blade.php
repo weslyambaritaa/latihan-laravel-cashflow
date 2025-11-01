@@ -30,7 +30,7 @@
                 </div>
 
                 <hr>
-                <p class="text-center">Belum memiliki akun? <a href="{{ route('auth.register') }}">Daftar</a></p>
+                <p class="text-center">Belum memiliki akun? <a href="{{ route('register') }}">Daftar</a></p>
             </div>
         </div>
     </div>
