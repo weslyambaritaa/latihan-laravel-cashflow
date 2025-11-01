@@ -19,8 +19,8 @@
                         <label class="form-label">Jenis Transaksi</label>
                         <select class="form-select" wire:model="editCashflowTipe">
                             <option value="" disabled selected>Pilih Jenis</option>
-                            <option value="pemasukan" {{ $editCashflowJenis == 'pemasukan' ? 'selected' : '' }}>Pemasukan</option>
-                            <option value="pengeluaran" {{ $editCashflowJenis == 'pengeluaran' ? 'selected' : '' }}>Pengeluaran</option>
+                            <option value="pemasukan" {{ $editCashflowTipe == 'pemasukan' ? 'selected' : '' }}>Pemasukan</option>
+                            <option value="pengeluaran" {{ $editCashflowTipe == 'pengeluaran' ? 'selected' : '' }}>Pengeluaran</option>
                         </select>
                         @error('editCashflowTipe')
                             <span class="text-danger">{{ $message }}</span>

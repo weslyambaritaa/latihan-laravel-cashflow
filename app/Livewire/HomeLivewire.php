@@ -24,16 +24,42 @@ class HomeLivewire extends Component
         return view('livewire.home-livewire', $data);
     }
 
-    // Add Cashflow
+// Add Cashflow
     public $addCashflowTitle;
+    public $addCashflowTipe;     // <--- TAMBAHKAN INI
+    public $addCashflowNominal;  // <--- TAMBAHKAN INI
     public $addCashflowDescription;
 
-    public function addCashflow()
+public function addCashflow()
     {
         $this->validate([
             'addCashflowTitle' => 'required|string|max:255',
-            'addCashflowDescription' => 'required|string',
+            'addCashflowTipe' => 'required|in:pemasukan,pengeluaran', // <-- VALIDASI TAMBAHAN
+            'addCashflowNominal' => 'required|numeric|min:0',        // <-- VALIDASI TAMBAHAN
+            'addCashflowDescription' => 'nullable|string', // <-- Sebaiknya 'nullable' (opsional)
         ]);
+
+        // Simpan cashflow ke database
+        Cashflow::create([
+            'title' => $this->addCashflowTitle,
+            'tipe' => $this->addCashflowTipe, // Baris ini sekarang akan valid
+            'nominal' => $this->addCashflowNominal, // Baris ini sekarang akan valid
+            'description' => $this->addCashflowDescription,
+            'user_id' => auth()->id(),
+        ]);
+
+
+        // Reset the form
+        $this->reset([
+            'addCashflowTitle', 
+            'addCashflowTipe',     // <--- TAMBAHKAN DI RESET
+            'addCashflowNominal',  // <--- TAMBAHKAN DI RESET
+            'addCashflowDescription'
+        ]);
+
+        // Tutup modal
+        $this->dispatch('closeModal', id: 'addCashflowModal');
+    }
 
         // Simpan cashflow ke database
         Cashflow::create([
@@ -82,7 +108,7 @@ class HomeLivewire extends Component
     {
     $this->validate([
         'editCashflowTitle' => 'required|string|max:255',
-        'editCashflowTipe' => 'required|in:Pemasukan,Pengeluaran',
+        'editCashflowTipe' => 'required|in:pemasukan,pengeluaran', // BENAR
         'editCashflowNominal' => 'required|numeric|min:0',
         'editCashflowDescription' => 'nullable|string|max:500',
     ]);
