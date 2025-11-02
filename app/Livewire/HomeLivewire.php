@@ -14,13 +14,16 @@ class HomeLivewire extends Component
 
     public $auth;
     public $cashflows;
-    public $cashflowTitle;
-    public $cashflowTipe = 'pemasukan';
-    public $cashflowNominal;
-    public $cashflowDescription;
-    public $cashflowFile;
+    
+    // --- START: Properti untuk Add Cashflow (DISINKRONKAN DENGAN MODAL) ---
+    public $addCashflowTitle;
+    public $addCashflowTipe = 'pemasukan'; // Nilai default
+    public $addCashflowNominal;
+    public $addCashflowDescription;
+    public $addCashflowFile;
+    // --- END: Properti untuk Add Cashflow ---
 
-    // --- START: Properti Baru untuk Edit dan Delete di Home ---
+    // --- Properti untuk Edit dan Delete (Sudah benar dari langkah sebelumnya) ---
     public $selectedCashflowId;
     public $editCashflowTitle;
     public $editCashflowTipe;
@@ -29,7 +32,6 @@ class HomeLivewire extends Component
 
     public $deleteCashflowTitle;
     public $deleteCashflowConfirmTitle;
-    // --- END: Properti Baru ---
 
     public function mount()
     {
@@ -49,50 +51,52 @@ class HomeLivewire extends Component
         return view('livewire.home-livewire');
     }
 
-    // --- START: Logika CRUD Cashflow (Create) ---
+    // Logika CRUD Cashflow (Create)
     public function addCashflow()
     {
+        // PERBAIKAN: Validasi menggunakan properti dengan awalan 'add'
         $validated = $this->validate([
-            'cashflowTitle' => 'required|string|max:255',
-            'cashflowTipe' => 'required|in:pemasukan,pengeluaran',
-            'cashflowNominal' => 'required|integer|min:1',
-            'cashflowDescription' => 'nullable|string',
-            'cashflowFile' => 'nullable|image|max:2048',
+            'addCashflowTitle' => 'required|string|max:255',
+            'addCashflowTipe' => 'required|in:pemasukan,pengeluaran',
+            'addCashflowNominal' => 'required|integer|min:1',
+            'addCashflowDescription' => 'nullable|string',
+            'addCashflowFile' => 'nullable|image|max:2048',
         ]);
 
         $path = null;
-        if ($this->cashflowFile) {
+        // PERBAIKAN: Cek file menggunakan properti addCashflowFile
+        if ($this->addCashflowFile) {
             $userId = $this->auth->id;
             $dateNumber = now()->format('YmdHis');
-            $extension = $this->cashflowFile->getClientOriginalExtension();
+            // PERBAIKAN: Ambil ekstensi dari properti addCashflowFile
+            $extension = $this->addCashflowFile->getClientOriginalExtension();
             $filename = $userId . '_' . $dateNumber . '.' . $extension;
-            $path = $this->cashflowFile->storeAs('covers', $filename, 'public');
+            // PERBAIKAN: Simpan file dari properti addCashflowFile
+            $path = $this->addCashflowFile->storeAs('covers', $filename, 'public');
         }
 
         Cashflow::create([
             'user_id' => $this->auth->id,
-            'title' => $validated['cashflowTitle'],
-            'tipe' => ucfirst($validated['cashflowTipe']),
-            'nominal' => $validated['cashflowNominal'],
-            'description' => $validated['cashflowDescription'],
+            'title' => $validated['addCashflowTitle'],
+            // Menggunakan strtolower() untuk memenuhi ENUM database
+            'tipe' => strtolower($validated['addCashflowTipe']), 
+            'nominal' => $validated['addCashflowNominal'],
+            'description' => $validated['addCashflowDescription'],
             'cover' => $path,
         ]);
 
-        $this->reset(['cashflowTitle', 'cashflowNominal', 'cashflowDescription', 'cashflowFile']);
+        // PERBAIKAN: Reset properti dengan awalan 'add'
+        $this->reset(['addCashflowTitle', 'addCashflowTipe', 'addCashflowNominal', 'addCashflowDescription', 'addCashflowFile']);
         $this->loadCashflows();
         $this->dispatch('closeModal', id: 'addCashflowModal');
     }
-    // --- END: Logika CRUD Cashflow (Create) ---
 
+    // --- Logika CRUD Cashflow (Edit & Delete) tidak berubah dari langkah sebelumnya ---
 
-    // --- START: Logika CRUD Cashflow (Edit & Delete) BARU ---
-
-    // Dipanggil saat tombol "Ubah Data" ditekan di halaman Home
     public function initEditModal($cashflowId)
     {
         $cashflow = Cashflow::findOrFail($cashflowId);
         
-        // Pengecekan keamanan
         if ($cashflow->user_id !== $this->auth->id) {
             return;
         }
@@ -123,17 +127,15 @@ class HomeLivewire extends Component
         }
         
         $cashflow->title = $validated['editCashflowTitle'];
-        $cashflow->tipe = ucfirst($validated['editCashflowTipe']);
+        $cashflow->tipe = strtolower($validated['editCashflowTipe']); 
         $cashflow->nominal = $validated['editCashflowNominal'];
         $cashflow->description = $validated['editCashflowDescription'];
         $cashflow->save();
 
-        // Refresh data di halaman home dan tutup modal
         $this->loadCashflows();
         $this->dispatch('closeModal', id: 'editCashflowModal');
     }
 
-    // Dipanggil saat tombol "Hapus" ditekan di halaman Home
     public function initDeleteModal($cashflowId)
     {
         $cashflow = Cashflow::findOrFail($cashflowId);
@@ -153,7 +155,6 @@ class HomeLivewire extends Component
     {
         $cashflow = Cashflow::findOrFail($this->selectedCashflowId);
 
-        // Pengecekan keamanan dan validasi konfirmasi judul
         if ($cashflow->user_id !== $this->auth->id) {
             return;
         }
@@ -165,17 +166,13 @@ class HomeLivewire extends Component
             'deleteCashflowConfirmTitle.required' => 'Judul konfirmasi wajib diisi.'
         ]);
 
-        // Hapus cover dan record
         if ($cashflow->cover && Storage::disk('public')->exists($cashflow->cover)) {
             Storage::disk('public')->delete($cashflow->cover);
         }
 
         $cashflow->delete();
 
-        // Refresh data di halaman home dan tutup modal
         $this->loadCashflows();
         $this->dispatch('closeModal', id: 'deleteCashflowModal');
     }
-
-    // --- END: Logika CRUD Cashflow (Edit & Delete) BARU ---
 }

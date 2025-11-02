@@ -32,7 +32,7 @@
 
                     <div class="mb-3">
                         <label class="form-label">Nominal</label>
-                        {{-- Input Nominal (TAMBAHKAN wire:model DI SINI) --}}
+                        {{-- Input Nominal (SUDAH BENAR) --}}
                         <input type="number" class="form-control" wire:model="addCashflowNominal">
                         @error('addCashflowNominal')
                             <span class="text-danger">{{ $message }}</span>
@@ -41,16 +41,26 @@
 
                     <div class="mb-3">
                         <label class="form-label">Deskripsi</label>
-                        {{-- Textarea Deskripsi (TAMBAHKAN wire:model DI SINI) --}}
+                        {{-- Textarea Deskripsi (SUDAH BENAR) --}}
                         <textarea class="form-control" rows="4" wire:model="addCashflowDescription"></textarea>
                         @error('addCashflowDescription')
                             <span class="text-danger">{{ $message }}</span>
                         @enderror
                     </div>
 
+                    {{-- TAMBAHAN: Input file untuk cover --}}
+                    <div class="mb-3">
+                        <label class="form-label">Cover (Opsional)</label>
+                        <input type="file" class="form-control" wire:model="addCashflowFile">
+                        @error('addCashflowFile')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                    </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
+                        {{-- TAMBAHAN: wire:loading.attr="disabled" untuk mencegah double-click --}}
+                        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">Simpan</button>
                     </div>
                 </form>
             </div>

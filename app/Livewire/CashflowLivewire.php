@@ -16,7 +16,7 @@ class CashflowLivewire extends Component
     public $cashflow;
     public $auth;
 
-    // --- Properti Baru untuk Edit dan Delete ---
+    // --- Properti untuk Edit dan Delete ---
     public $editCashflowTitle;
     public $editCashflowTipe;
     public $editCashflowNominal;
@@ -27,8 +27,6 @@ class CashflowLivewire extends Component
     // --- END: Properti Baru ---
 
     // 2. FUNGSI MOUNT DIPERBAIKI
-    // Ini akan secara otomatis menerima data $cashflow yang dikirim dari
-    // @livewire('cashflow-livewire', ['cashflow' => $cashflow])
     public function mount(Cashflow $cashflow)
     {
         $this->auth = Auth::user();
@@ -44,9 +42,6 @@ class CashflowLivewire extends Component
     // 4. FUNGSI RENDER DIPERBAIKI
     public function render()
     {
-        // Nama view harus 'livewire.cashflow-livewire'
-        // agar cocok dengan file:
-        // resources/views/livewire/cashflow-livewire.blade.php
         return view('livewire.cashflow-livewire');
     }
 
@@ -56,14 +51,12 @@ class CashflowLivewire extends Component
     public function initEditModal()
     {
         $this->editCashflowTitle = $this->cashflow->title;
-        // Simpan dalam lowercase agar cocok dengan opsi di modal (pemasukan/pengeluaran)
         $this->editCashflowTipe = strtolower($this->cashflow->tipe);
         $this->editCashflowNominal = $this->cashflow->nominal;
         $this->editCashflowDescription = $this->cashflow->description;
 
         $this->reset(['deleteCashflowConfirmTitle']);
 
-        // BARU: Dispatch event untuk membuka modal setelah data siap
         $this->dispatch('openModal', id: 'editCashflowModal');
     }
 
@@ -73,7 +66,6 @@ class CashflowLivewire extends Component
         $this->deleteCashflowTitle = $this->cashflow->title;
         $this->reset(['deleteCashflowConfirmTitle']);
 
-        // BARU: Dispatch event untuk membuka modal setelah data siap
         $this->dispatch('openModal', id: 'deleteCashflowModal');
     }
 
@@ -88,8 +80,7 @@ class CashflowLivewire extends Component
         ]);
 
         $this->cashflow->title = $validated['editCashflowTitle'];
-        // Pastikan 'tipe' disimpan dengan huruf kapital awal (Pemasukan/Pengeluaran)
-        $this->cashflow->tipe = ucfirst($validated['editCashflowTipe']);
+        $this->cashflow->tipe = strtolower($validated['editCashflowTipe']); // PERBAIKAN: strtolower()
         $this->cashflow->nominal = $validated['editCashflowNominal'];
         $this->cashflow->description = $validated['editCashflowDescription'];
         $this->cashflow->save();
@@ -120,7 +111,7 @@ class CashflowLivewire extends Component
         return redirect()->route('app.home');
     }
 
-    // --- (Logika Upload Cover Anda - Ini sudah terlihat benar) ---
+    // --- (Logika Upload Cover) ---
     public $editCoverCashflowFile;
 
     public function editCoverCashflow()
