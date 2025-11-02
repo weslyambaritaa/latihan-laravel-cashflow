@@ -21,13 +21,13 @@
             </a>
             
             <div class="d-flex align-items-center">
-                {{-- Pastikan user sudah login sebelum menampilkan nama --}}
+                {{-- Hanya tampilkan jika user sudah login --}}
                 @auth
                     <span class="navbar-text me-3">
                         Welcome, {{ auth()->user()->name }}
                     </span>
                     
-                    {{-- Formulir Logout --}}
+                    {{-- Formulir Logout (Memastikan type="submit" untuk POST request) --}}
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="btn btn-danger btn-sm">
@@ -49,15 +49,14 @@
     <script src="{{ asset('assets/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js') }}"></script>
     @livewireScripts
 
-    {{-- START: JavaScript Listener untuk Interaksi Livewire dengan Modal Bootstrap (PERBAIKAN UTAMA) --}}
+    {{-- START: JavaScript Listener untuk Interaksi Livewire dengan Modal Bootstrap --}}
     <script>
         document.addEventListener('livewire:initialized', () => {
-            // Listener untuk membuka modal Bootstrap. Dipanggil dari CashflowLivewire.php (initEditModal/initDeleteModal)
+            // Listener untuk membuka modal Bootstrap. Dipanggil dari komponen Livewire.
             Livewire.on('openModal', ({ id }) => {
-                // Pastikan library Bootstrap sudah dimuat dan Modal tersedia
                 if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                    // Coba dapatkan instance modal yang sudah ada (untuk menghindari duplikasi)
                     let modalElement = document.getElementById(id);
+                    // Dapatkan instance yang sudah ada atau buat baru
                     let modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
                     modal.show();
                 } else {
@@ -65,7 +64,7 @@
                 }
             });
 
-            // Listener untuk menutup modal Bootstrap. Dipanggil dari CashflowLivewire.php (editCashflow/deleteCashflow)
+            // Listener untuk menutup modal Bootstrap. Dipanggil dari komponen Livewire setelah penyimpanan/penghapusan.
             Livewire.on('closeModal', ({ id }) => {
                 let modalElement = document.getElementById(id);
                 let modal = bootstrap.Modal.getInstance(modalElement);
