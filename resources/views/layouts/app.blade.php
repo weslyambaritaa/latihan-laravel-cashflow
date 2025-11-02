@@ -7,6 +7,10 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Cashflow App</title>
     <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css') }}">
+    
+    {{-- TAMBAHAN: CDN SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     @livewireStyles
 </head>
 
@@ -49,14 +53,13 @@
     <script src="{{ asset('assets/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js') }}"></script>
     @livewireScripts
 
-    {{-- START: JavaScript Listener untuk Interaksi Livewire dengan Modal Bootstrap --}}
+    {{-- START: JavaScript Listener untuk Interaksi Livewire --}}
     <script>
         document.addEventListener('livewire:initialized', () => {
-            // Listener untuk membuka modal Bootstrap. Dipanggil dari komponen Livewire.
+            // Listener untuk membuka modal Bootstrap.
             Livewire.on('openModal', ({ id }) => {
                 if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
                     let modalElement = document.getElementById(id);
-                    // Dapatkan instance yang sudah ada atau buat baru
                     let modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
                     modal.show();
                 } else {
@@ -64,7 +67,7 @@
                 }
             });
 
-            // Listener untuk menutup modal Bootstrap. Dipanggil dari komponen Livewire setelah penyimpanan/penghapusan.
+            // Listener untuk menutup modal Bootstrap.
             Livewire.on('closeModal', ({ id }) => {
                 let modalElement = document.getElementById(id);
                 let modal = bootstrap.Modal.getInstance(modalElement);
@@ -72,7 +75,40 @@
                     modal.hide();
                 }
             });
+
+            // --- TAMBAHAN: Listener untuk SweetAlert (Toast) ---
+            // Listener ini akan menangkap event 'swal:alert'
+            Livewire.on('swal:alert', ({ icon, title, text }) => {
+                Swal.fire({
+                    icon: icon,       // 'success', 'error', 'warning', 'info'
+                    title: title,     // Judul popup
+                    text: text,       // Teks di bawah judul
+                    toast: true,      // Tampilkan sebagai toast
+                    position: 'top-end', // Posisi di kanan atas
+                    showConfirmButton: false, // Sembunyikan tombol OK
+                    timer: 3000,      // Tutup otomatis setelah 3 detik
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        // Untuk pause timer saat mouse hover
+                        toast.onmouseenter = Swal.stopTimer;
+                        toast.onmouseleave = Swal.resumeTimer;
+                    }
+                });
+            });
+            // --- END: Listener SweetAlert ---
         });
+
+        // --- TAMBAHAN: Cek Flash Message (untuk notifikasi setelah redirect, cth: Hapus Data) ---
+        // Ini dijalankan saat halaman di-load, bukan saat Livewire inisialisasi
+        @if (session()->has('message'))
+            Swal.fire({
+                icon: '{{ session('message-icon', 'success') }}', // 'success' adalah default
+                title: '{{ session('message') }}',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        @endif
+        // --- END: Cek Flash Message ---
     </script>
     {{-- END: JavaScript Listener --}}
 </body>

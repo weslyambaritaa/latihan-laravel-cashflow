@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-// 1. NAMA KELAS DIPERBAIKI (agar cocok dengan nama file 'CashflowLivewire.php')
 class CashflowLivewire extends Component
 {
     use WithFileUploads;
@@ -24,22 +23,21 @@ class CashflowLivewire extends Component
 
     public $deleteCashflowTitle;
     public $deleteCashflowConfirmTitle;
-    // --- END: Properti Baru ---
+    
+    // Properti untuk Upload Cover
+    public $editCoverCashflowFile;
 
-    // 2. FUNGSI MOUNT DIPERBAIKI
+
     public function mount(Cashflow $cashflow)
     {
         $this->auth = Auth::user();
         $this->cashflow = $cashflow;
 
-        // 3. Pengecekan keamanan (memastikan ini milik user)
         if ($this->cashflow->user_id !== $this->auth->id) {
-            // Jika bukan pemilik, tendang ke halaman home
             return redirect()->route('app.home');
         }
     }
 
-    // 4. FUNGSI RENDER DIPERBAIKI
     public function render()
     {
         return view('livewire.cashflow-livewire');
@@ -47,25 +45,20 @@ class CashflowLivewire extends Component
 
     // --- Logika Inisialisasi Modal ---
 
-    // Dipanggil saat tombol "Ubah Data" ditekan
     public function initEditModal()
     {
         $this->editCashflowTitle = $this->cashflow->title;
         $this->editCashflowTipe = strtolower($this->cashflow->tipe);
         $this->editCashflowNominal = $this->cashflow->nominal;
         $this->editCashflowDescription = $this->cashflow->description;
-
         $this->reset(['deleteCashflowConfirmTitle']);
-
         $this->dispatch('openModal', id: 'editCashflowModal');
     }
 
-    // Dipanggil saat tombol "Hapus" ditekan
     public function initDeleteModal()
     {
         $this->deleteCashflowTitle = $this->cashflow->title;
         $this->reset(['deleteCashflowConfirmTitle']);
-
         $this->dispatch('openModal', id: 'deleteCashflowModal');
     }
 
@@ -80,40 +73,46 @@ class CashflowLivewire extends Component
         ]);
 
         $this->cashflow->title = $validated['editCashflowTitle'];
-        $this->cashflow->tipe = strtolower($validated['editCashflowTipe']); // PERBAIKAN: strtolower()
+        $this->cashflow->tipe = strtolower($validated['editCashflowTipe']);
         $this->cashflow->nominal = $validated['editCashflowNominal'];
         $this->cashflow->description = $validated['editCashflowDescription'];
         $this->cashflow->save();
 
-        // Kirim event untuk menutup modal
         $this->dispatch('closeModal', id: 'editCashflowModal');
+
+        // --- TAMBAHAN: Kirim event SweetAlert ---
+        $this->dispatch('swal:alert', [
+            'icon' => 'success',
+            'title' => 'Berhasil',
+            'text' => 'Data cashflow berhasil diperbarui.',
+        ]);
     }
 
     // --- Logika Delete Cashflow ---
     public function deleteCashflow()
     {
-        // Validasi konfirmasi judul
         $this->validate([
             'deleteCashflowConfirmTitle' => 'required|in:' . $this->cashflow->title,
         ], [
-            'deleteCashflowConfirmTitle.in' => 'Judul konfirmasi tidak cocok dengan judul Cashflow.',
+            'deleteCashflowConfirmTitle.in' => 'Judul konfirmasi tidak cocok.',
             'deleteCashflowConfirmTitle.required' => 'Judul konfirmasi wajib diisi.'
         ]);
 
-        // Hapus cover jika ada
         if ($this->cashflow->cover && Storage::disk('public')->exists($this->cashflow->cover)) {
             Storage::disk('public')->delete($this->cashflow->cover);
         }
 
         $this->cashflow->delete();
 
+        // --- PERUBAHAN: Gunakan session flash untuk notifikasi redirect ---
+        session()->flash('message', 'Cashflow berhasil dihapus.');
+        session()->flash('message-icon', 'success'); // Anda bisa ganti 'error' jika gagal
+
         // Arahkan ke halaman home setelah berhasil dihapus
         return redirect()->route('app.home');
     }
 
     // --- (Logika Upload Cover) ---
-    public $editCoverCashflowFile;
-
     public function editCoverCashflow()
     {
         $this->validate([
@@ -121,7 +120,6 @@ class CashflowLivewire extends Component
         ]);
 
         if ($this->editCoverCashflowFile) {
-            // Hapus cover lama jika ada
             if ($this->cashflow->cover && Storage::disk('public')->exists($this->cashflow->cover)) {
                 Storage::disk('public')->delete($this->cashflow->cover);
             }
@@ -136,7 +134,13 @@ class CashflowLivewire extends Component
         }
 
         $this->reset(['editCoverCashflowFile']);
-
         $this->dispatch('closeModal', id: 'editCoverCashflowModal');
+
+        // --- TAMBAHAN: Kirim event SweetAlert ---
+        $this->dispatch('swal:alert', [
+            'icon' => 'success',
+            'title' => 'Berhasil',
+            'text' => 'Cover cashflow berhasil diperbarui.',
+        ]);
     }
 }
