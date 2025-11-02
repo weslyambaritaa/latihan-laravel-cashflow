@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class HomeLivewire extends Component
 {
@@ -75,6 +77,52 @@ class HomeLivewire extends Component
         }
     }
 
+    // Fungsi untuk mengambil data Chart
+    public function getChartData()
+    {
+        $days = [];
+        $pemasukanData = [];
+        $pengeluaranData = [];
+
+        // Ambil data 7 hari terakhir (termasuk hari ini)
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $dateString = $date->format('Y-m-d');
+            $dayName = $date->format('D, j M'); // Format: Min, 2 Nov
+
+            $days[] = $dayName;
+
+            // Query Pemasukan pada hari itu
+            $pemasukan = Cashflow::where('user_id', $this->auth->id)
+                ->where('tipe', 'pemasukan')
+                ->whereDate('created_at', $dateString)
+                ->sum('nominal');
+            $pemasukanData[] = (int) $pemasukan;
+
+            // Query Pengeluaran pada hari itu
+            $pengeluaran = Cashflow::where('user_id', $this->auth->id)
+                ->where('tipe', 'pengeluaran')
+                ->whereDate('created_at', $dateString)
+                ->sum('nominal');
+            $pengeluaranData[] = (int) $pengeluaran;
+        }
+
+        // Kembalikan data dalam format yang siap dipakai ApexCharts
+        return [
+            'categories' => $days,
+            'series' => [
+                [
+                    'name' => 'Pemasukan',
+                    'data' => $pemasukanData,
+                ],
+                [
+                    'name' => 'Pengeluaran',
+                    'data' => $pengeluaranData,
+                ],
+            ],
+        ];
+    }
+
     // Fungsi render untuk menampilkan data
     public function render()
     {
@@ -112,14 +160,24 @@ class HomeLivewire extends Component
         $totalPengeluaran = (clone $query_for_totals)->where('tipe', 'pengeluaran')->sum('nominal');
         $saldo = $totalPemasukan - $totalPengeluaran;
 
+        // ======================================================
+        // PERBAIKAN: Mengubah 10 menjadi 20
+        // ======================================================
         // 6. Paginate query utama (yang memiliki semua filter)
-        $cashflows = $query->orderBy('created_at', 'desc')->paginate(10);
+        $cashflows = $query->orderBy('created_at', 'desc')->paginate(20);
+        // ======================================================
+        // END PERBAIKAN
+        // ======================================================
         
+        // 7. Ambil data chart
+        $chartData = $this->getChartData();
+
         return view('livewire.home-livewire', [
             'cashflows' => $cashflows,
             'totalPemasukan' => $totalPemasukan,
             'totalPengeluaran' => $totalPengeluaran,
             'totalAkumulasi' => $saldo,
+            'chartData' => $chartData, // Kirim data chart ke view
         ]);
     }
 
@@ -163,6 +221,9 @@ class HomeLivewire extends Component
         );
 
         $this->resetPage();
+
+        // Update chart
+        $this->dispatch('updateChart', data: $this->getChartData());
     }
 
 
@@ -200,11 +261,7 @@ class HomeLivewire extends Component
         ]);
 
         $this->selectedCashflow->title = $validated['editCashflowTitle'];
-        
-        // --- PERBAIKAN DI SINI (baris 208) ---
-        // Mengganti $this. menjadi $this->
         $this->selectedCashflow->tipe = strtolower($validated['editCashflowTipe']);
-        
         $this->selectedCashflow->nominal = $validated['editCashflowNominal'];
         $this->selectedCashflow->description = $validated['editCashflowDescription'];
         $this->selectedCashflow->save();
@@ -217,6 +274,9 @@ class HomeLivewire extends Component
         );
         
         $this->reset(['selectedCashflow', 'editCashflowTitle', 'editCashflowTipe', 'editCashflowNominal', 'editCashflowDescription']);
+
+        // Update chart
+        $this->dispatch('updateChart', data: $this->getChartData());
     }
 
     public function initDeleteModal($id)
@@ -254,6 +314,9 @@ class HomeLivewire extends Component
 
         $this->reset(['selectedCashflow', 'deleteCashflowTitle', 'deleteCashflowConfirmTitle']);
         $this->resetPage(); 
+
+        // Update chart
+        $this->dispatch('updateChart', data: $this->getChartData());
     }
 
     public function initEditCoverModal($id)
@@ -273,8 +336,6 @@ class HomeLivewire extends Component
 
         if ($this->editCoverCashflowFile) {
             
-            // --- PERBAIKAN KEDUA DI SINI ---
-            // Mengganti $this. menjadi $this->
             if ($this->selectedCashflow->cover && Storage::disk('public')->exists($this->selectedCashflow->cover)) {
                 Storage::disk('public')->delete($this->selectedCashflow->cover);
             }
