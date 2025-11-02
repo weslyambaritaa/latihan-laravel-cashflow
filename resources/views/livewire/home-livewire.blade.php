@@ -2,7 +2,7 @@
     <h2 class="mt-3 display-6 fw-bold text-dark border-bottom pb-2">Dashboard Keuangan <i class="bi bi-graph-up-arrow"></i></h2>
     
     {{-- START: Summary Card Total Cashflow (Lebih Elegan) --}}
-    <div class="row mb-5">
+    <div class="row mb-5 mt-4">
         
         {{-- Total Pemasukan --}}
         <div class="col-md-4 mb-4">
@@ -59,6 +59,24 @@
         </div>
     </div>
     {{-- END: Summary Card Total Cashflow --}}
+
+    {{-- START: TAMBAHAN STATISTIK CHART --}}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm rounded-4 border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-dark fw-bold">Statistik 7 Hari Terakhir</h5>
+                    {{-- 
+                        Container untuk chart. 
+                        'data-chart-data' digunakan untuk mengirim data awal 
+                        dari $chartData (PHP) ke JavaScript (di app.blade.php)
+                    --}}
+                    <div id="cashflowChart" data-chart-data="{{ json_encode($chartData) }}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{-- END: TAMBAHAN STATISTIK CHART --}}
 
 
     {{-- START: Area Kontrol (Tambah Data, Filter, Search) --}}
@@ -131,6 +149,7 @@
                             
                             {{-- Judul Cashflow --}}
                             <h5 class="card-title mb-1 text-dark">
+                                {{-- PERBAIKAN DI SINI: 'id'B' diubah menjadi 'id' --}}
                                 <a href="{{ route('app.cashflows.detail', ['id' => $cashflow->id]) }}" 
                                     class="text-decoration-none text-body fw-bolder text-truncate d-block"
                                     title="{{ $cashflow->title }}">
@@ -146,7 +165,7 @@
                             {{-- Keterangan Singkat (Truncated) --}}
                             <p class="card-text text-muted small mb-3 text-truncate">
                                 {{ $cashflow->description ?: 'Tidak ada deskripsi transaksi.' }}
-                            </label>
+                            </p> {{-- <-- PERBAIKAN DI SINI: </label> diubah menjadi </p> --}}
                             
                             {{-- Tanggal Pembuatan dan Perubahan --}}
                             <div class="small text-end text-secondary mb-3 pt-2 border-top">

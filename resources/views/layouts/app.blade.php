@@ -11,6 +11,9 @@
     {{-- TAMBAHAN: CDN SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    {{-- TAMBAHAN: CDN ApexCharts --}}
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
     @livewireStyles
 </head>
 
@@ -76,8 +79,7 @@
                 }
             });
 
-            // --- TAMBAHAN: Listener untuk SweetAlert (Toast) ---
-            // Listener ini akan menangkap event 'swal:alert'
+            // --- Listener untuk SweetAlert (Toast) ---
             Livewire.on('swal:alert', ({ icon, title, text }) => {
                 Swal.fire({
                     icon: icon,       // 'success', 'error', 'warning', 'info'
@@ -96,10 +98,81 @@
                 });
             });
             // --- END: Listener SweetAlert ---
+
+            // --- TAMBAHAN: Logika ApexCharts ---
+            let cashflowChart = null;
+            const chartElement = document.getElementById('cashflowChart');
+            
+            // 1. Fungsi untuk inisialisasi/update chart
+            const setupChart = (data) => {
+                const options = {
+                    series: data.series,
+                    chart: {
+                        type: 'bar',
+                        height: 350,
+                        toolbar: { show: true, tools: { download: false } }
+                    },
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '55%',
+                            borderRadius: 4
+                        },
+                    },
+                    dataLabels: { enabled: false },
+                    stroke: {
+                        show: true,
+                        width: 2,
+                        colors: ['transparent']
+                    },
+                    xaxis: {
+                        categories: data.categories,
+                    },
+                    yaxis: {
+                        title: { text: 'Rupiah (Rp)' }
+                    },
+                    fill: { opacity: 1 },
+                    tooltip: {
+                        y: {
+                            // Format tooltip ke Rupiah
+                            formatter: (val) => "Rp " + new Intl.NumberFormat('id-ID').format(val)
+                        }
+                    },
+                    // Warna: Hijau (Pemasukan), Merah (Pengeluaran)
+                    colors: ['#28a745', '#dc3545'] 
+                };
+
+                if (cashflowChart) {
+                    // Jika chart sudah ada, update datanya
+                    cashflowChart.updateOptions(options);
+                } else {
+                    // Jika belum, buat instance baru
+                    cashflowChart = new ApexCharts(chartElement, options);
+                    cashflowChart.render();
+                }
+            };
+
+            // 2. Inisialisasi chart saat halaman load (jika elemen #cashflowChart ada)
+            if (chartElement) {
+                // Ambil data awal dari 'data-chart-data' yang kita tambahkan di home-livewire.blade.php
+                try {
+                    const initialData = JSON.parse(chartElement.dataset.chartData);
+                    setupChart(initialData);
+                } catch (e) {
+                    console.error('Gagal mem-parsing data chart awal:', e);
+                }
+            }
+
+            // 3. Listener untuk event 'updateChart' yang dikirim dari HomeLivewire.php
+            Livewire.on('updateChart', ({ data }) => {
+                if (chartElement) {
+                    setupChart(data);
+                }
+            });
+            // --- END: Logika ApexCharts ---
         });
 
-        // --- TAMBAHAN: Cek Flash Message (untuk notifikasi setelah redirect, cth: Hapus Data) ---
-        // Ini dijalankan saat halaman di-load, bukan saat Livewire inisialisasi
+        // --- Cek Flash Message (untuk notifikasi setelah redirect, cth: Hapus Data) ---
         @if (session()->has('message'))
             Swal.fire({
                 icon: '{{ session('message-icon', 'success') }}', // 'success' adalah default
