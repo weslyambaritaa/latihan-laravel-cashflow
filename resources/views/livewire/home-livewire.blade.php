@@ -66,7 +66,8 @@
         
         {{-- Tombol Tambah Data dan Jumlah Data --}}
         <div class="order-1 order-md-0">
-            <h4 class="me-3 mb-0 text-dark">List Transaksi ({{ $cashflows->count() }} Data)</h4>
+            {{-- 1. Gunakan $cashflows->total() untuk jumlah total data (bukan $cashflows->count()) --}}
+            <h4 class="me-3 mb-0 text-dark">List Transaksi ({{ $cashflows->total() }} Data)</h4>
             <button class="btn btn-success mt-2 shadow-sm fw-bold rounded-pill px-4" data-bs-target="#addCashflowModal" data-bs-toggle="modal">
                 <i class="bi bi-plus-lg"></i> Tambah Transaksi
             </button>
@@ -105,7 +106,6 @@
                     @endphp
 
                     {{-- Card Utama dengan efek Shadow & Hover --}}
-                    {{-- Efek hover ditambahkan via inline JS untuk kesederhanaan (tanpa CSS kustom) --}}
                     <div class="card h-100 shadow-lg border-0 rounded-4 overflow-hidden hover-scale {{ $borderColor }}"
                         style="transition: transform 0.3s, box-shadow 0.3s;"
                         onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 1rem 3rem rgba(0,0,0,.175)'"
@@ -146,7 +146,7 @@
                             {{-- Keterangan Singkat (Truncated) --}}
                             <p class="card-text text-muted small mb-3 text-truncate">
                                 {{ $cashflow->description ?: 'Tidak ada deskripsi transaksi.' }}
-                            </p>
+                            </label>
                             
                             {{-- Tanggal Pembuatan dan Perubahan --}}
                             <div class="small text-end text-secondary mb-3 pt-2 border-top">
@@ -186,6 +186,12 @@
                 </div>
             @endforeach
         </div>
+
+        {{-- 2. Tambahkan link pagination di bawah baris --}}
+        <div class="mt-4 d-flex justify-content-center">
+            {{ $cashflows->links() }}
+        </div>
+
     @endif
 
     {{-- Modals --}}

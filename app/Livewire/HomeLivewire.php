@@ -7,24 +7,27 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination; // 1. Tambahkan use WithPagination
 
 class HomeLivewire extends Component
 {
     use WithFileUploads;
+    use WithPagination; // 2. Gunakan trait WithPagination
+
+    protected $paginationTheme = 'bootstrap'; // 3. Atur tema pagination
 
     public $auth;
-    public $cashflows;
     
-    // --- START: Properti Baru untuk Pencarian dan Filter ---
+    // --- START: Properti untuk Pencarian dan Filter ---
     public $search = ''; 
     public $filterTipe = ''; 
-    // --- END: Properti Baru ---
+    // --- END: Properti untuk Pencarian dan Filter ---
     
-    // --- START: Properti Baru untuk Total Akumulasi ---
+    // --- START: Properti untuk Total Akumulasi ---
     public $totalPemasukan = 0;
     public $totalPengeluaran = 0;
     public $totalAkumulasi = 0;
-    // --- END: Properti Baru untuk Total Akumulasi ---
+    // --- END: Properti untuk Total Akumulasi ---
     
     // --- START: Properti untuk Add Cashflow (DISINKRONKAN DENGAN MODAL) ---
     public $addCashflowTitle;
@@ -47,11 +50,22 @@ class HomeLivewire extends Component
     public function mount()
     {
         $this->auth = Auth::user();
-        $this->loadCashflows();
+        $this->loadTotals(); // 4. Panggil loadTotals() saat mount
     }
 
-    // PERUBAHAN UTAMA: Menerapkan filter, pencarian, dan menghitung total
-    public function loadCashflows()
+    // 5. Buat method terpisah untuk menghitung total akumulasi
+    public function loadTotals()
+    {
+        // Perhitungan Total (Dihitung dari SEMUA data Cashflow user, tanpa filter)
+        $allCashflows = Cashflow::where('user_id', $this->auth->id)->get();
+        
+        $this->totalPemasukan = $allCashflows->where('tipe', 'pemasukan')->sum('nominal');
+        $this->totalPengeluaran = $allCashflows->where('tipe', 'pengeluaran')->sum('nominal');
+        $this->totalAkumulasi = $this->totalPemasukan - $this->totalPengeluaran;
+    }
+
+    // 6. Modifikasi method render() untuk query dan pagination
+    public function render()
     {
         $query = Cashflow::where('user_id', $this->auth->id);
 
@@ -69,36 +83,26 @@ class HomeLivewire extends Component
             $query->where('tipe', $tipe);
         }
 
-        $this->cashflows = $query->orderBy('created_at', 'desc')->get();
-        
-        // --- START: Logika Perhitungan Total (Dihitung dari SEMUA data Cashflow user, tanpa filter) ---
-        $allCashflows = Cashflow::where('user_id', $this->auth->id)->get();
-        
-        $this->totalPemasukan = $allCashflows->where('tipe', 'pemasukan')->sum('nominal');
-        $this->totalPengeluaran = $allCashflows->where('tipe', 'pengeluaran')->sum('nominal');
-        $this->totalAkumulasi = $this->totalPemasukan - $this->totalPengeluaran;
-        // --- END: Logika Perhitungan Total ---
+        // Ambil data dengan pagination (20 per halaman)
+        $cashflows = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        return view('livewire.home-livewire', [
+            'cashflows' => $cashflows, // Pass data paginated ke view
+        ]);
     }
 
-    public function render()
-    {
-        return view('livewire.home-livewire');
-    }
-
-    // Lifecycle Hook untuk memuat ulang data saat filter/search berubah
+    // 7. Modifikasi updated() untuk resetPage()
     public function updated($propertyName)
     {
+        // Reset ke halaman 1 setiap kali filter atau search diubah
         if ($propertyName === 'search' || $propertyName === 'filterTipe') {
-            // Reset selected ID agar modal tidak terbuka saat data berubah
-            $this->reset(['selectedCashflowId', 'editCashflowTitle', 'deleteCashflowTitle']);
-            $this->loadCashflows();
+            $this->resetPage(); 
         }
     }
 
     // Logika CRUD Cashflow (Create)
     public function addCashflow()
     {
-        // PERBAIKAN: Validasi menggunakan properti dengan awalan 'add'
         $validated = $this->validate([
             'addCashflowTitle' => 'required|string|max:255',
             'addCashflowTipe' => 'required|in:pemasukan,pengeluaran',
@@ -108,32 +112,29 @@ class HomeLivewire extends Component
         ]);
 
         $path = null;
-        // PERBAIKAN: Cek file menggunakan properti addCashflowFile
         if ($this->addCashflowFile) {
             $userId = $this->auth->id;
             $dateNumber = now()->format('YmdHis');
-            // PERBAIKAN: Ambil ekstensi dari properti addCashflowFile
             $extension = $this->addCashflowFile->getClientOriginalExtension();
             $filename = $userId . '_' . $dateNumber . '.' . $extension;
-            // PERBAIKAN: Simpan file dari properti addCashflowFile
             $path = $this->addCashflowFile->storeAs('covers', $filename, 'public');
         }
 
         Cashflow::create([
             'user_id' => $this->auth->id,
             'title' => $validated['addCashflowTitle'],
-            // Menggunakan strtolower() untuk memenuhi ENUM database
             'tipe' => strtolower($validated['addCashflowTipe']), 
             'nominal' => $validated['addCashflowNominal'],
             'description' => $validated['addCashflowDescription'],
             'cover' => $path,
         ]);
 
-        // PERBAIKAN: Reset properti dengan awalan 'add'
         $this->reset(['addCashflowTitle', 'addCashflowTipe', 'addCashflowNominal', 'addCashflowDescription', 'addCashflowFile']);
-        $this->loadCashflows();
+        $this->loadTotals(); // 8. Panggil loadTotals() setelah create
         $this->dispatch('closeModal', id: 'addCashflowModal');
     }
+
+    // --- Logika CRUD Cashflow (Edit & Delete) ---
 
     public function initEditModal($cashflowId)
     {
@@ -174,7 +175,7 @@ class HomeLivewire extends Component
         $cashflow->description = $validated['editCashflowDescription'];
         $cashflow->save();
 
-        $this->loadCashflows();
+        $this->loadTotals(); // 9. Panggil loadTotals() setelah edit
         $this->dispatch('closeModal', id: 'editCashflowModal');
     }
 
@@ -214,7 +215,7 @@ class HomeLivewire extends Component
 
         $cashflow->delete();
 
-        $this->loadCashflows();
+        $this->loadTotals(); // 10. Panggil loadTotals() setelah delete
         $this->dispatch('closeModal', id: 'deleteCashflowModal');
     }
 }
