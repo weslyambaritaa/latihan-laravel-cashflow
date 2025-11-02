@@ -19,7 +19,16 @@
                     <strong>Nominal:</strong> Rp {{ number_format($cashflow->nominal, 0, ',', '.') }}
                 </p>
             </div>
-            <div>
+            <div class="d-flex gap-2"> {{-- TAMBAHAN: Gunakan d-flex gap-2 agar tombol bersebelahan --}}
+                {{-- TOMBOL UBAH DATA: Hapus data-bs-target dan data-bs-toggle --}}
+                <button class="btn btn-primary" wire:click="initEditModal">
+                    Ubah Data
+                </button>
+                {{-- TOMBOL HAPUS: Hapus data-bs-target dan data-bs-toggle --}}
+                <button class="btn btn-danger" wire:click="initDeleteModal">
+                    Hapus
+                </button>
+                {{-- Tombol Ubah Cover (menggunakan Bootstrap native) --}}
                 <button class="btn btn-warning" data-bs-target="#editCoverCashflowModal" data-bs-toggle="modal">
                     Ubah Cover
                 </button>
@@ -37,4 +46,6 @@
 
     {{-- Modals --}}
     @include('components.modals.cashflows.edit-cover')
+    @include('components.modals.cashflows.edit')
+    @include('components.modals.cashflows.delete')
 </div>

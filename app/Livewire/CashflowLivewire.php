@@ -16,6 +16,16 @@ class CashflowLivewire extends Component
     public $cashflow;
     public $auth;
 
+    // --- Properti Baru untuk Edit dan Delete ---
+    public $editCashflowTitle;
+    public $editCashflowTipe;
+    public $editCashflowNominal;
+    public $editCashflowDescription;
+
+    public $deleteCashflowTitle;
+    public $deleteCashflowConfirmTitle;
+    // --- END: Properti Baru ---
+
     // 2. FUNGSI MOUNT DIPERBAIKI
     // Ini akan secara otomatis menerima data $cashflow yang dikirim dari
     // @livewire('cashflow-livewire', ['cashflow' => $cashflow])
@@ -38,6 +48,76 @@ class CashflowLivewire extends Component
         // agar cocok dengan file:
         // resources/views/livewire/cashflow-livewire.blade.php
         return view('livewire.cashflow-livewire');
+    }
+
+    // --- Logika Inisialisasi Modal ---
+
+    // Dipanggil saat tombol "Ubah Data" ditekan
+    public function initEditModal()
+    {
+        $this->editCashflowTitle = $this->cashflow->title;
+        // Simpan dalam lowercase agar cocok dengan opsi di modal (pemasukan/pengeluaran)
+        $this->editCashflowTipe = strtolower($this->cashflow->tipe);
+        $this->editCashflowNominal = $this->cashflow->nominal;
+        $this->editCashflowDescription = $this->cashflow->description;
+
+        $this->reset(['deleteCashflowConfirmTitle']);
+
+        // BARU: Dispatch event untuk membuka modal setelah data siap
+        $this->dispatch('openModal', id: 'editCashflowModal');
+    }
+
+    // Dipanggil saat tombol "Hapus" ditekan
+    public function initDeleteModal()
+    {
+        $this->deleteCashflowTitle = $this->cashflow->title;
+        $this->reset(['deleteCashflowConfirmTitle']);
+
+        // BARU: Dispatch event untuk membuka modal setelah data siap
+        $this->dispatch('openModal', id: 'deleteCashflowModal');
+    }
+
+    // --- Logika Edit Cashflow ---
+    public function editCashflow()
+    {
+        $validated = $this->validate([
+            'editCashflowTitle' => 'required|string|max:255',
+            'editCashflowTipe' => 'required|in:pemasukan,pengeluaran',
+            'editCashflowNominal' => 'required|integer|min:1',
+            'editCashflowDescription' => 'nullable|string',
+        ]);
+
+        $this->cashflow->title = $validated['editCashflowTitle'];
+        // Pastikan 'tipe' disimpan dengan huruf kapital awal (Pemasukan/Pengeluaran)
+        $this->cashflow->tipe = ucfirst($validated['editCashflowTipe']);
+        $this->cashflow->nominal = $validated['editCashflowNominal'];
+        $this->cashflow->description = $validated['editCashflowDescription'];
+        $this->cashflow->save();
+
+        // Kirim event untuk menutup modal
+        $this->dispatch('closeModal', id: 'editCashflowModal');
+    }
+
+    // --- Logika Delete Cashflow ---
+    public function deleteCashflow()
+    {
+        // Validasi konfirmasi judul
+        $this->validate([
+            'deleteCashflowConfirmTitle' => 'required|in:' . $this->cashflow->title,
+        ], [
+            'deleteCashflowConfirmTitle.in' => 'Judul konfirmasi tidak cocok dengan judul Cashflow.',
+            'deleteCashflowConfirmTitle.required' => 'Judul konfirmasi wajib diisi.'
+        ]);
+
+        // Hapus cover jika ada
+        if ($this->cashflow->cover && Storage::disk('public')->exists($this->cashflow->cover)) {
+            Storage::disk('public')->delete($this->cashflow->cover);
+        }
+
+        $this->cashflow->delete();
+
+        // Arahkan ke halaman home setelah berhasil dihapus
+        return redirect()->route('app.home');
     }
 
     // --- (Logika Upload Cover Anda - Ini sudah terlihat benar) ---

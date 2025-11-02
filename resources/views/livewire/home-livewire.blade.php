@@ -1,80 +1,71 @@
 <div>
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="card-title">Daftar Cashflow</h3>
-        {{-- Tombol Tambah --}}
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCashflowModal">
-            Tambah
+    <h2 class="mt-3">Dashboard</h2>
+    <div class="d-flex align-items-center mb-4">
+        <h4 class="me-3 mb-0">List Cashflow</h4>
+        <button class="btn btn-success" data-bs-target="#addCashflowModal" data-bs-toggle="modal">
+            Tambah Data
         </button>
     </div>
 
-    {{-- Notifikasi Sukses --}}
-    @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    {{-- Daftar Cashflow --}}
     @if ($cashflows->isEmpty())
-        <div class="alert alert-info" role="alert">
-            Belum ada data cashflow.
-        </div>
+        <div class="alert alert-info">Belum ada data Cashflow. Silakan tambahkan data.</div>
     @else
-        <div class="list-group">
+        <div class="row">
             @foreach ($cashflows as $cashflow)
-                {{-- PERUBAHAN DIMULAI DI SINI --}}
-                <div class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between align-items-center">
-
-                        {{-- Sisi Kiri: Judul --}}
-                        <div>
-                            <h5 class="mb-0">{{ $cashflow->title }}</h5>
-                        </div>
-
-                        {{-- Sisi Kanan: Tipe, Nominal, & Tombol Aksi --}}
-                        <div class="d-flex align-items-center">
-
-                            {{-- Kolom Tipe (Sesuai Permintaan Anda) --}}
-                            <div class="me-3" style="min-width: 100px; text-align: right;">
-                                @if ($cashflow->tipe === 'pemasukan')
-                                    <span class="text-success fw-bold">Pemasukan</span>
-                                @elseif ($cashflow->tipe === 'pengeluaran')
-                                    <span class="text-danger fw-bold">Pengeluaran</span>
-                                @endif
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        {{-- Cover Image --}}
+                        @if ($cashflow->cover)
+                            <img src="{{ asset('storage/' . $cashflow->cover) }}" class="card-img-top" alt="Cover"
+                                style="height: 150px; object-fit: cover;">
+                        @else
+                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center"
+                                style="height: 150px;">
+                                No Cover Image
                             </div>
+                        @endif
 
-                            {{-- Kolom Nominal (Seperti screenshot, teks hitam) --}}
-                            <div class="me-3" style="min-width: 120px; text-align: right;">
-                                <strong>
-                                    Rp {{ number_format($cashflow->nominal, 0, ',', '.') }}
-                                </strong>
-                            </div>
-
-                            {{-- Tombol Aksi (Edit, Delete, Detail) --}}
-                            <div class="btn-group" role="group" aria-label="Aksi Cashflow">
-                                {{-- Tombol Detail --}}
-                                <a href="{{ route('app.cashflow.detail', $cashflow->id) }}"
-                                    class="btn btn-info btn-sm">
-                                    Detail
+                        <div class="card-body">
+                            {{-- Tipe dan Judul --}}
+                            <h5 class="card-title d-flex justify-content-between">
+                                {{-- PERBAIKAN DI SINI: Mengubah ['cashflow' => ...] menjadi ['id' => ...] --}}
+                                <a href="{{ route('app.cashflows.detail', ['id' => $cashflow->id]) }}" 
+                                    class="text-decoration-none text-body">
+                                    {{ $cashflow->title }}
                                 </a>
+                                @if ($cashflow->tipe === 'Pemasukan')
+                                    <span class="badge bg-success">Pemasukan</span>
+                                @elseif ($cashflow->tipe === 'Pengeluaran')
+                                    <span class="badge bg-danger">Pengeluaran</span>
+                                @endif
+                            </h5>
 
+                            {{-- Nominal --}}
+                            <p class="card-text text-muted mb-3">
+                                Rp {{ number_format($cashflow->nominal, 0, ',', '.') }}
+                            </p>
+
+                            {{-- Tombol Aksi --}}
+                            <div class="d-flex gap-2">
                                 {{-- Tombol Edit --}}
-                                <button class="btn btn-warning btn-sm"
-                                    wire:click="prepareEditCashflow({{ $cashflow->id }})">
-                                    Edit
+                                <button class="btn btn-primary btn-sm flex-grow-1"
+                                    wire:click="initEditModal({{ $cashflow->id }})">
+                                    Ubah Data
                                 </button>
-
                                 {{-- Tombol Delete --}}
-                                <button class="btn btn-danger btn-sm"
-                                    wire:click="prepareDeleteCashflow({{ $cashflow->id }})">
+                                <button class="btn btn-danger btn-sm flex-grow-1"
+                                    wire:click="initDeleteModal({{ $cashflow->id }})">
                                     Hapus
                                 </button>
+                                {{-- Tombol Detail --}}
+                                <a href="{{ route('app.cashflows.detail', ['id' => $cashflow->id]) }}"
+                                    class="btn btn-info btn-sm">
+                                    <i class="bi bi-eye"></i> Detail
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
-                {{-- PERUBAHAN BERAKHIR DI SINI --}}
             @endforeach
         </div>
     @endif
@@ -83,4 +74,5 @@
     @include('components.modals.cashflows.add')
     @include('components.modals.cashflows.edit')
     @include('components.modals.cashflows.delete')
+
 </div>
