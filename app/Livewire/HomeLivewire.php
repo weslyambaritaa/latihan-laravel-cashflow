@@ -15,6 +15,17 @@ class HomeLivewire extends Component
     public $auth;
     public $cashflows;
     
+    // --- START: Properti Baru untuk Pencarian dan Filter ---
+    public $search = ''; 
+    public $filterTipe = ''; 
+    // --- END: Properti Baru ---
+    
+    // --- START: Properti Baru untuk Total Akumulasi ---
+    public $totalPemasukan = 0;
+    public $totalPengeluaran = 0;
+    public $totalAkumulasi = 0;
+    // --- END: Properti Baru untuk Total Akumulasi ---
+    
     // --- START: Properti untuk Add Cashflow (DISINKRONKAN DENGAN MODAL) ---
     public $addCashflowTitle;
     public $addCashflowTipe = 'pemasukan'; // Nilai default
@@ -39,16 +50,49 @@ class HomeLivewire extends Component
         $this->loadCashflows();
     }
 
+    // PERUBAHAN UTAMA: Menerapkan filter, pencarian, dan menghitung total
     public function loadCashflows()
     {
-        $this->cashflows = Cashflow::where('user_id', $this->auth->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Cashflow::where('user_id', $this->auth->id);
+
+        // Logika Pencarian: Berdasarkan title atau description
+        if ($this->search) {
+            $query->where(function($q) {
+                $q->where('title', 'like', '%' . $this->search . '%')
+                  ->orWhere('description', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        // Logika Filter Tipe: Berdasarkan 'pemasukan' atau 'pengeluaran'
+        $tipe = strtolower($this->filterTipe);
+        if (in_array($tipe, ['pemasukan', 'pengeluaran'])) {
+            $query->where('tipe', $tipe);
+        }
+
+        $this->cashflows = $query->orderBy('created_at', 'desc')->get();
+        
+        // --- START: Logika Perhitungan Total (Dihitung dari SEMUA data Cashflow user, tanpa filter) ---
+        $allCashflows = Cashflow::where('user_id', $this->auth->id)->get();
+        
+        $this->totalPemasukan = $allCashflows->where('tipe', 'pemasukan')->sum('nominal');
+        $this->totalPengeluaran = $allCashflows->where('tipe', 'pengeluaran')->sum('nominal');
+        $this->totalAkumulasi = $this->totalPemasukan - $this->totalPengeluaran;
+        // --- END: Logika Perhitungan Total ---
     }
 
     public function render()
     {
         return view('livewire.home-livewire');
+    }
+
+    // Lifecycle Hook untuk memuat ulang data saat filter/search berubah
+    public function updated($propertyName)
+    {
+        if ($propertyName === 'search' || $propertyName === 'filterTipe') {
+            // Reset selected ID agar modal tidak terbuka saat data berubah
+            $this->reset(['selectedCashflowId', 'editCashflowTitle', 'deleteCashflowTitle']);
+            $this->loadCashflows();
+        }
     }
 
     // Logika CRUD Cashflow (Create)
@@ -90,8 +134,6 @@ class HomeLivewire extends Component
         $this->loadCashflows();
         $this->dispatch('closeModal', id: 'addCashflowModal');
     }
-
-    // --- Logika CRUD Cashflow (Edit & Delete) tidak berubah dari langkah sebelumnya ---
 
     public function initEditModal($cashflowId)
     {
