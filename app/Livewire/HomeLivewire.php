@@ -2,20 +2,19 @@
 
 namespace App\Livewire;
 
-use App\Models\Cashflow; // Pastikan ini di-import
+use App\Models\Cashflow;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\WithPagination; //
+use Livewire\WithPagination;
 
 class HomeLivewire extends Component
 {
-    use WithPagination, WithFileUploads; //
+    use WithPagination, WithFileUploads;
 
-    // --- TAMBAHAN UNTUK MEMPERBAIKI TAMPILAN PAGINATION ---
+    // Mengatur tema pagination agar sesuai Bootstrap
     protected $paginationTheme = 'bootstrap';
-    // --- END TAMBAHAN ---
 
     public $auth;
 
@@ -32,8 +31,8 @@ class HomeLivewire extends Component
     public $filterBulan;
     public $filterTahun;
 
-    // --- ProSemua-semua untuk Edit/Delete ---
-    public $selectedCashflow; 
+    // --- Properti untuk Edit/Delete ---
+    public $selectedCashflow;
     public $editCashflowTitle;
     public $editCashflowTipe;
     public $editCashflowNominal;
@@ -48,79 +47,80 @@ class HomeLivewire extends Component
         'filterTipe' => ['except' => 'semua', 'as' => 'tipe'],
         'filterBulan' => ['except' => '', 'as' => 'bulan'],
         'filterTahun' => ['except' => '', 'as' => 'tahun'],
-    ]; //
+    ];
 
     public function mount()
     {
-        $this->auth = Auth::user(); //
+        $this->auth = Auth::user();
         if (empty($this->filterTahun)) {
-            $this->filterTahun = now()->format('Y'); //
+            $this->filterTahun = now()->format('Y');
         }
         if (empty($this->filterBulan)) {
-            $this->filterBulan = now()->format('Y-m'); //
+            $this->filterBulan = now()->format('Y-m');
         }
     }
 
     public function resetFilter()
     {
-        $this->reset(['filterSearch', 'filterTipe']); //
-        $this->filterTahun = now()->format('Y'); //
-        $this->filterBulan = now()->format('Y-m'); //
-        $this->resetPage(); //
+        $this->reset(['filterSearch', 'filterTipe']);
+        $this->filterTahun = now()->format('Y');
+        $this->filterBulan = now()->format('Y-m');
+        $this->resetPage();
     }
 
     public function updated($propertyName)
     {
         if (in_array($propertyName, ['filterSearch', 'filterTipe', 'filterBulan', 'filterTahun'])) {
-            $this->resetPage(); //
+            $this->resetPage();
         }
     }
 
+    // Fungsi render untuk menampilkan data
     public function render()
     {
-        $query = Cashflow::where('user_id', $this->auth->id); //
+        // 1. Mulai query dasar
+        $query = Cashflow::where('user_id', $this->auth->id);
 
-        // Filter Search (Judul atau Deskripsi)
+        // 2. Terapkan filter non-tipe (Search dan Waktu)
         if (!empty($this->filterSearch)) {
             $query->where(function ($q) {
                 $q->where('title', 'like', '%' . $this->filterSearch . '%')
                   ->orWhere('description', 'like', '%' . $this->filterSearch . '%');
-            }); //
+            });
         }
 
-        // Filter Tipe
-        if ($this->filterTipe !== 'semua') {
-            $query->where('tipe', $this->filterTipe); //
-        }
-
-        // Filter Waktu (Berdasarkan Bulan atau Tahun)
         if (!empty($this->filterBulan)) {
-            // Jika filter bulan dipilih (format YYYY-MM)
             $query->whereMonth('created_at', date('m', strtotime($this->filterBulan)))
-                  ->whereYear('created_at', date('Y', strtotime($this->filterBulan))); //
+                  ->whereYear('created_at', date('Y', strtotime($this->filterBulan)));
         } elseif (!empty($this->filterTahun)) {
-            // Jika hanya filter tahun (format YYYY)
-            $query->whereYear('created_at', $this->filterTahun); //
+            $query->whereYear('created_at', $this->filterTahun);
         }
 
-        // Ambil data
-        $cashflows = $query->orderBy('created_at', 'desc')->paginate(10); //
+        // 3. Clone query SEKARANG (sebelum filter 'tipe') untuk menghitung total
+        $query_for_totals = clone $query;
 
-        // Kalkulasi Total Pemasukan
-        $totalPemasukan = (clone $query)->where('tipe', 'pemasukan')->sum('nominal'); //
+        // 4. SEKARANG terapkan filter 'tipe' hanya ke query utama (untuk daftar)
+        if ($this->filterTipe === 'pemasukan') {
+            $query->where('tipe', 'pemasukan');
+        } elseif ($this->filterTipe === 'pengeluaran') {
+            $query->where('tipe', 'pengeluaran');
+        }
+        // Jika 'semua', $query tidak diubah.
 
-        // Kalkulasi Total Pengeluaran
-        $totalPengeluaran = (clone $query)->where('tipe', 'pengeluaran')->sum('nominal'); //
+        // 5. Hitung total menggunakan query clone (yang tidak terpengaruh filter 'tipe')
+        $totalPemasukan = (clone $query_for_totals)->where('tipe', 'pemasukan')->sum('nominal');
+        $totalPengeluaran = (clone $query_for_totals)->where('tipe', 'pengeluaran')->sum('nominal');
+        $saldo = $totalPemasukan - $totalPengeluaran;
 
-        // Kalkulasi Saldo
-        $saldo = $totalPemasukan - $totalPengeluaran; //
-
+        // 6. Paginate query utama (yang memiliki semua filter)
+        $cashflows = $query->orderBy('created_at', 'desc')->paginate(10);
+        
         return view('livewire.home-livewire', [
             'cashflows' => $cashflows,
             'totalPemasukan' => $totalPemasukan,
             'totalPengeluaran' => $totalPengeluaran,
             'totalAkumulasi' => $saldo,
-        ]); //
+        ]);
     }
 
     // --- Logika Add Cashflow ---
@@ -131,8 +131,8 @@ class HomeLivewire extends Component
             'addCashflowTipe' => 'required|in:pemasukan,pengeluaran',
             'addCashflowNominal' => 'required|integer|min:1',
             'addCashflowDescription' => 'nullable|string',
-            'addCashflowFile' => 'nullable|image|max:2048', // 2MB Max
-        ]); //
+            'addCashflowFile' => 'nullable|image|max:2048',
+        ]);
 
         $path = null;
         if ($this->addCashflowFile) {
@@ -141,7 +141,7 @@ class HomeLivewire extends Component
             $extension = $this->addCashflowFile->getClientOriginalExtension();
             $filename = $userId . '_' . $dateNumber . '.' . $extension;
             $path = $this->addCashflowFile->storeAs('covers', $filename, 'public');
-        } //
+        }
 
         Cashflow::create([
             'user_id' => $this->auth->id,
@@ -150,20 +150,19 @@ class HomeLivewire extends Component
             'nominal' => $validated['addCashflowNominal'],
             'description' => $validated['addCashflowDescription'],
             'cover' => $path,
-        ]); //
+        ]);
 
-        $this->reset(['addCashflowTitle', 'addCashflowTipe', 'addCashflowNominal', 'addCashflowDescription', 'addCashflowFile']); //
-        $this->addCashflowTipe = 'pemasukan'; //
-
+        $this->reset(['addCashflowTitle', 'addCashflowTipe', 'addCashflowNominal', 'addCashflowDescription', 'addCashflowFile']);
+        $this->addCashflowTipe = 'pemasukan';
         $this->dispatch('closeModal', id: 'addCashflowModal');
-
+        
         $this->dispatch('swal:alert', 
             icon: 'success', 
             title: 'Berhasil', 
             text: 'Cashflow baru berhasil ditambahkan.'
         );
 
-        $this->resetPage(); //
+        $this->resetPage();
     }
 
 
@@ -201,7 +200,11 @@ class HomeLivewire extends Component
         ]);
 
         $this->selectedCashflow->title = $validated['editCashflowTitle'];
+        
+        // --- PERBAIKAN DI SINI (baris 208) ---
+        // Mengganti $this. menjadi $this->
         $this->selectedCashflow->tipe = strtolower($validated['editCashflowTipe']);
+        
         $this->selectedCashflow->nominal = $validated['editCashflowNominal'];
         $this->selectedCashflow->description = $validated['editCashflowDescription'];
         $this->selectedCashflow->save();
@@ -265,10 +268,13 @@ class HomeLivewire extends Component
         if (!$this->selectedCashflow) return; 
 
         $this->validate([
-            'editCoverCashflowFile' => 'required|image|max:2048',  // 2MB Max
+            'editCoverCashflowFile' => 'required|image|max:2048',
         ]);
 
         if ($this->editCoverCashflowFile) {
+            
+            // --- PERBAIKAN KEDUA DI SINI ---
+            // Mengganti $this. menjadi $this->
             if ($this->selectedCashflow->cover && Storage::disk('public')->exists($this->selectedCashflow->cover)) {
                 Storage::disk('public')->delete($this->selectedCashflow->cover);
             }
