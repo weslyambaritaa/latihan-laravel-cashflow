@@ -8,10 +8,7 @@
     @include('components.modals.cashflows.delete')
     @include('components.modals.cashflows.edit-cover')
 
-    {{-- 
-      Navigasi Breadcrumb (Opsional, tapi bagus untuk UX)
-      Ini mengarahkan pengguna kembali ke halaman utama
-    --}}
+    {{-- Navigasi Breadcrumb --}}
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ route('app.home') }}">Home</a></li>
@@ -19,16 +16,12 @@
         </ol>
     </nav>
 
-    {{-- 
-      Judul Halaman 
-    --}}
+    {{-- Judul Halaman --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0">Detail Cashflow</h3>
     </div>
 
-    {{-- 
-      Kartu Detail 
-    --}}
+    {{-- Kartu Detail --}}
     <div class="card shadow-sm">
         <div class="row g-0">
             {{-- Kolom Cover Gambar --}}
@@ -77,25 +70,15 @@
 
                     <hr>
 
-                    {{-- 
-                      *** INI PERUBAHANNYA ***
-                      Area Deskripsi yang sekarang merender HTML
-                    --}}
+                    {{-- Area Deskripsi Trix --}}
                     <h6 class="fw-bold">Deskripsi:</h6>
                     
-                    {{-- 
-                      Tambahkan kelas "trix-content"
-                      Ini akan membuat tampilan HTML Anda (seperti list, dll) 
-                      secara otomatis mengikuti gaya default Trix.
-                    --}}
+                    {{-- Kelas "trix-content" untuk styling --}}
                     <div class="trix-content">
-                        {{-- 
-                          Gunakan {!! ... !!} untuk merender HTML
-                          Bukan {{ ... }}
-                        --}}
+                        {{-- Gunakan {!! ... !!} untuk merender HTML --}}
                         {!! $cashflow->description !!}
                     </div>
-                    {{-- *** END PERUBAHAN *** --}}
+                    {{-- End Deskripsi --}}
 
                     {{-- Tombol Aksi (Ubah & Hapus) --}}
                     <div class="mt-4 pt-3 border-top">

@@ -8,16 +8,18 @@
     <title>Cashflow App</title>
     <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css') }}">
     
-    {{-- TAMBAHAN: CDN SweetAlert2 --}}
+    {{-- 1. SCRIPT SweetAlert (JS) --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    {{-- TAMBAHAN: CDN ApexCharts --}}
+    {{-- 2. STYLE SweetAlert (CSS) --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    {{-- 3. SCRIPT ApexCharts --}}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-    {{-- *** PERUBAHAN: Aset Trix Editor (CSS & JS) *** --}}
+    {{-- 4. Aset Trix Editor (CSS & JS) --}}
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
-    <script type_5"text/javascript" src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
-    {{-- *** END PERUBAHAN *** --}}
+    <script type="text/javascript" src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
 
     @livewireStyles
 
@@ -101,24 +103,25 @@
             });
 
             // --- Listener untuk SweetAlert (Toast) ---
+            // *** PERBAIKAN DI SINI: Kembalikan ke kode awal yang sederhana ***
             Livewire.on('swal:alert', ({ icon, title, text }) => {
                 Swal.fire({
-                    icon: icon,       // 'success', 'error', 'warning', 'info'
-                    title: title,     // Judul popup
-                    text: text,       // Teks di bawah judul
-                    toast: true,      // Tampilkan sebagai toast
-                    position: 'top-end', // Posisi di kanan atas
-                    showConfirmButton: false, // Sembunyikan tombol OK
-                    timer: 3000,      // Tutup otomatis setelah 3 detik
+                    icon: icon,
+                    title: title,
+                    text: text,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
                     timerProgressBar: true,
                     didOpen: (toast) => {
-                        // Untuk pause timer saat mouse hover
                         toast.onmouseenter = Swal.stopTimer;
                         toast.onmouseleave = Swal.resumeTimer;
                     }
                 });
             });
             // --- END: Listener SweetAlert ---
+
 
             // --- TAMBAHAN: Logika ApexCharts ---
             let cashflowChart = null;

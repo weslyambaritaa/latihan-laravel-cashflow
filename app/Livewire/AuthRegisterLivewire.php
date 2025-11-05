@@ -11,31 +11,30 @@ class AuthRegisterLivewire extends Component
     public $name;
     public $email;
     public $password;
-
-    public function register()
-    {
-        $this->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string',
-        ]);
-
-        // Daftarkan user
-        User::create([
-            'name' => $this->name,
-            'email' => $this->email,
-            'password' => Hash::make($this->password),
-        ]);
-
-        // Reset data
-        $this->reset(['name', 'email', 'password']);
-
-        // Redirect ke halaman login
-        return redirect()->route('auth.login');
-    }
+    public $password_confirmation;
 
     public function render()
     {
         return view('livewire.auth-register-livewire');
+    }
+
+    // *** PERUBAHAN DI SINI ***
+    // Mengubah nama fungsi dari 'register' menjadi 'registerUser'
+    // agar cocok dengan panggilan wire:submit di file Blade
+    public function registerUser() 
+    {
+        $validated = $this->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email|max:255',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = new User();
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->password = Hash::make($validated['password']);
+        $user->save();
+
+        return redirect()->route('login')->with('success', 'Registrasi berhasil, silakan login.');
     }
 }

@@ -1,32 +1,50 @@
-<!doctype html>
-<html lang="id">
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-    {{-- Meta --}}
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>@yield('title', 'Cashflow App')</title> {{-- Judul dinamis --}}
 
-    {{-- Icon --}}
-    <link rel="icon" href="/logo.png" type="image/x-icon" />
+    {{-- Bootstrap CSS --}}
+    <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css') }}">
+    
+    {{-- TAMBAHAN: Bootstrap Icons --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    {{-- Judul --}}
-    <title>Laravel Cashflow</title>
-
-    {{-- Styles --}}
     @livewireStyles
-    <link rel="stylesheet" href="/assets/vendor/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+
+    {{-- Style kustom untuk background --}}
+    <style>
+        body {
+            /* Fallback */
+            background-color: #f0f2f5; 
+            
+            /* Gradient background */
+            background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            
+            /* Agar konten di tengah */
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 40px;
+            padding-bottom: 40px;
+        }
+    </style>
 </head>
 
 <body class="bg-light">
-    <div class="container-fluid mt-5">
-        @yield('content')
-    </div>
 
-    {{-- Scripts --}}
+    {{-- Konten akan dimuat di sini --}}
+    <main class="container">
+        @yield('content')
+    </main>
+
+    {{-- Bootstrap JS --}}
+    <script src="{{ asset('assets/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js') }}"></script>
     @livewireScripts
-    <link rel="stylesheet" href="/assets/vendor/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js">
 </body>
 
 </html>

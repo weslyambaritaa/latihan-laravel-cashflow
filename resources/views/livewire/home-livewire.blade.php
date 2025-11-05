@@ -66,11 +66,6 @@
             <div class="card shadow-sm rounded-4 border-0">
                 <div class="card-body">
                     <h5 class="card-title text-dark fw-bold">Statistik 7 Hari Terakhir</h5>
-                    {{-- 
-                        Container untuk chart. 
-                        'data-chart-data' digunakan untuk mengirim data awal 
-                        dari $chartData (PHP) ke JavaScript (di app.blade.php)
-                    --}}
                     <div id="cashflowChart" data-chart-data="{{ json_encode($chartData) }}"></div>
                 </div>
             </div>
@@ -84,7 +79,6 @@
         
         {{-- Tombol Tambah Data dan Jumlah Data --}}
         <div class="order-1 order-md-0">
-            {{-- 1. Gunakan $cashflows->total() untuk jumlah total data (bukan $cashflows->count()) --}}
             <h4 class="me-3 mb-0 text-dark">List Transaksi ({{ $cashflows->total() }} Data)</h4>
             <button class="btn btn-success mt-2 shadow-sm fw-bold rounded-pill px-4" data-bs-target="#addCashflowModal" data-bs-toggle="modal">
                 <i class="bi bi-plus-lg"></i> Tambah Transaksi
@@ -93,15 +87,18 @@
 
         {{-- Kolom Filter dan Search (di sebelah KANAN pada md ke atas) --}}
         <div class="d-flex flex-column flex-sm-row gap-2 order-0 order-md-1 w-100 w-md-50">
-            {{-- Filter Tipe --}}
-            <select class="form-select w-sm-50 shadow-sm rounded-pill" wire:model.live="filterTipe">
+            
+            {{-- PERBAIKAN AKSESIBILITAS 1: Filter Tipe --}}
+            <label for="filterTipe" class="form-label visually-hidden">Filter Berdasarkan Tipe</label>
+            <select class="form-select w-sm-50 shadow-sm rounded-pill" id="filterTipe" wire:model.live="filterTipe">
                 <option value="">Semua Tipe</option>
                 <option value="pemasukan">Pemasukan</option>
                 <option value="pengeluaran">Pengeluaran</option>
             </select>
             
-            {{-- Pencarian --}}
-            <input type="text" class="form-control w-sm-50 shadow-sm rounded-pill" placeholder="Cari judul/deskripsi..."
+            {{-- PERBAIKAN AKSESIBILITAS 2: Pencarian --}}
+            <label for="searchInput" class="form-label visually-hidden">Cari Judul</label>
+            <input type="text" class="form-control w-sm-50 shadow-sm rounded-pill" id="searchInput" placeholder="Cari judul..."
                 wire:model.live="search">
         </div>
     </div>
@@ -149,7 +146,6 @@
                             
                             {{-- Judul Cashflow --}}
                             <h5 class="card-title mb-1 text-dark">
-                                {{-- PERBAIKAN DI SINI: 'id'B' diubah menjadi 'id' --}}
                                 <a href="{{ route('app.cashflows.detail', ['id' => $cashflow->id]) }}" 
                                     class="text-decoration-none text-body fw-bolder text-truncate d-block"
                                     title="{{ $cashflow->title }}">
@@ -163,10 +159,8 @@
                             </p>
                             
                             {{-- 
-                              ===========================================================
                               *** INI PERBAIKANNYA ***
-                              Kita gabungkan strip_tags, html_entity_decode, dan trim
-                              ===========================================================
+                              Mengubah \IlluminateSupport\Str menjadi \Illuminate\Support\Str
                             --}}
                             <p class="card-text text-muted small mb-3 text-truncate">
                                 {{ $cashflow->description ? \Illuminate\Support\Str::limit(trim(html_entity_decode(strip_tags($cashflow->description))), 100) : 'Tidak ada deskripsi transaksi.' }}
@@ -211,7 +205,7 @@
             @endforeach
         </div>
 
-        {{-- 2. Tambahkan link pagination di bawah baris --}}
+        {{-- link pagination --}}
         <div class="mt-4 d-flex justify-content-center">
             {{ $cashflows->links() }}
         </div>

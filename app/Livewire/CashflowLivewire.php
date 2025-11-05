@@ -80,12 +80,12 @@ class CashflowLivewire extends Component
 
         $this->dispatch('closeModal', id: 'editCashflowModal');
 
-        // --- TAMBAHAN: Kirim event SweetAlert ---
-        $this->dispatch('swal:alert', [
-            'icon' => 'success',
-            'title' => 'Berhasil',
-            'text' => 'Data cashflow berhasil diperbarui.',
-        ]);
+        // Mengirim notif sebagai OBJEK (bukan array)
+        $this->dispatch('swal:alert', 
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Data cashflow berhasil diperbarui.',
+        );
     }
 
     // --- Logika Delete Cashflow ---
@@ -104,11 +104,9 @@ class CashflowLivewire extends Component
 
         $this->cashflow->delete();
 
-        // --- PERUBAHAN: Gunakan session flash untuk notifikasi redirect ---
         session()->flash('message', 'Cashflow berhasil dihapus.');
-        session()->flash('message-icon', 'success'); // Anda bisa ganti 'error' jika gagal
+        session()->flash('message-icon', 'success');
 
-        // Arahkan ke halaman home setelah berhasil dihapus
         return redirect()->route('app.home');
     }
 
@@ -136,11 +134,11 @@ class CashflowLivewire extends Component
         $this->reset(['editCoverCashflowFile']);
         $this->dispatch('closeModal', id: 'editCoverCashflowModal');
 
-        // --- TAMBAHAN: Kirim event SweetAlert ---
-        $this->dispatch('swal:alert', [
-            'icon' => 'success',
-            'title' => 'Berhasil',
-            'text' => 'Cover cashflow berhasil diperbarui.',
-        ]);
+        // Mengirim notif sebagai OBJEK (bukan array)
+        $this->dispatch('swal:alert', 
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Cover cashflow berhasil diperbarui.',
+        );
     }
 }
