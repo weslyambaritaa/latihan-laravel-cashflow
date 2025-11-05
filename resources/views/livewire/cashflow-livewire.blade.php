@@ -1,51 +1,113 @@
-<div class="mt-3">
-    <div class="card">
-        <div class="card-header d-flex">
-            <div class="flex-fill">
-                <a href="{{ route('app.home') }}" class="text-decoration-none">
-                    <small class="text-muted">
-                        &lt; Kembali
-                    </small>
-                </a>
-                <h3>
-                    {{ $cashflow->title }}
-                    @if ($cashflow->tipe === 'Pemasukan')
-                        <small class="badge bg-success">Pemasukan</small>
-                    @elseif ($cashflow->tipe === 'Pengeluaran')
-                        <small class="badge bg-danger">Pengeluaran</small>
-                    @endif
-                </h3>
-                <p class="text-muted mb-0">
-                    <strong>Nominal:</strong> Rp {{ number_format($cashflow->nominal, 0, ',', '.') }}
-                </p>
-            </div>
-            <div class="d-flex gap-2"> {{-- TAMBAHAN: Gunakan d-flex gap-2 agar tombol bersebelahan --}}
-                {{-- TOMBOL UBAH DATA: Hapus data-bs-target dan data-bs-toggle --}}
-                <button class="btn btn-primary" wire:click="initEditModal">
-                    Ubah Data
-                </button>
-                {{-- TOMBOL HAPUS: Hapus data-bs-target dan data-bs-toggle --}}
-                <button class="btn btn-danger" wire:click="initDeleteModal">
-                    Hapus
-                </button>
-                {{-- Tombol Ubah Cover (menggunakan Bootstrap native) --}}
-                <button class="btn btn-warning" data-bs-target="#editCoverCashflowModal" data-bs-toggle="modal">
+<div>
+    {{-- 
+      Sertakan Modal
+      (Modal-modal ini tidak terlihat di halaman, tetapi perlu dimuat 
+       agar Livewire dapat berinteraksi dengan mereka)
+    --}}
+    @include('components.modals.cashflows.edit')
+    @include('components.modals.cashflows.delete')
+    @include('components.modals.cashflows.edit-cover')
+
+    {{-- 
+      Navigasi Breadcrumb (Opsional, tapi bagus untuk UX)
+      Ini mengarahkan pengguna kembali ke halaman utama
+    --}}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ route('app.home') }}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Detail</li>
+        </ol>
+    </nav>
+
+    {{-- 
+      Judul Halaman 
+    --}}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Detail Cashflow</h3>
+    </div>
+
+    {{-- 
+      Kartu Detail 
+    --}}
+    <div class="card shadow-sm">
+        <div class="row g-0">
+            {{-- Kolom Cover Gambar --}}
+            <div class="col-md-4 bg-light p-3 text-center">
+                @if ($cashflow->cover)
+                    <img src="{{ asset('storage/' . $cashflow->cover) }}" 
+                         class="img-fluid rounded" 
+                         alt="Cover Image" 
+                         style="max-height: 300px; object-fit: cover;">
+                @else
+                    {{-- Placeholder jika tidak ada gambar --}}
+                    <img src="https://via.placeholder.com/400x300.png?text=Tidak+Ada+Cover" 
+                         class="img-fluid rounded" 
+                         alt="No Cover">
+                @endif
+
+                {{-- Tombol Ubah Cover --}}
+                <button 
+                    class="btn btn-outline-secondary btn-sm mt-3" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#editCoverCashflowModal">
                     Ubah Cover
                 </button>
             </div>
-        </div>
 
-        <div class="card-body">
-            @if ($cashflow->cover)
-                <img src="{{ asset('storage/' . $cashflow->cover) }}" alt="Cover" style="max-width: 100%;">
-                <hr>
-            @endif
-            <p style="font-size: 18px;">{{ $cashflow->description }}</p>
+            {{-- Kolom Detail Teks --}}
+            <div class="col-md-8">
+                <div class="card-body p-4">
+                    {{-- Judul Transaksi --}}
+                    <h4 class="card-title mb-1">{{ $cashflow->title }}</h4>
+
+                    {{-- Tipe (Badge) dan Nominal --}}
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge fs-6 me-3 {{ $cashflow->tipe == 'pemasukan' ? 'bg-success' : 'bg-danger' }}">
+                            {{ ucfirst($cashflow->tipe) }}
+                        </span>
+                        <span class="fs-5 fw-bold text-dark">
+                            Rp {{ number_format($cashflow->nominal, 0, ',', '.') }}
+                        </span>
+                    </div>
+
+                    {{-- Tanggal Dibuat --}}
+                    <p class="card-text text-muted">
+                        Dibuat pada: {{ $cashflow->created_at->format('d F Y, H:i') }}
+                    </p>
+
+                    <hr>
+
+                    {{-- 
+                      *** INI PERUBAHANNYA ***
+                      Area Deskripsi yang sekarang merender HTML
+                    --}}
+                    <h6 class="fw-bold">Deskripsi:</h6>
+                    
+                    {{-- 
+                      Tambahkan kelas "trix-content"
+                      Ini akan membuat tampilan HTML Anda (seperti list, dll) 
+                      secara otomatis mengikuti gaya default Trix.
+                    --}}
+                    <div class="trix-content">
+                        {{-- 
+                          Gunakan {!! ... !!} untuk merender HTML
+                          Bukan {{ ... }}
+                        --}}
+                        {!! $cashflow->description !!}
+                    </div>
+                    {{-- *** END PERUBAHAN *** --}}
+
+                    {{-- Tombol Aksi (Ubah & Hapus) --}}
+                    <div class="mt-4 pt-3 border-top">
+                        <button wire:click="initEditModal" class="btn btn-warning">
+                            <i class="bi bi-pencil-fill"></i> Ubah Data
+                        </button>
+                        <button wire:click="initDeleteModal" class="btn btn-danger">
+                            <i class="bi bi-trash-fill"></i> Hapus
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
-    {{-- Modals --}}
-    @include('components.modals.cashflows.edit-cover')
-    @include('components.modals.cashflows.edit')
-    @include('components.modals.cashflows.delete')
 </div>

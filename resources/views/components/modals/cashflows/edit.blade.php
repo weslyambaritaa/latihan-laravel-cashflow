@@ -39,15 +39,59 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="mb-3">
-                        <label for="editCashflowDescription" class="form-label">Deskripsi</label>
-                        {{-- Menggunakan properti editCashflowDescription --}}
-                        <textarea class="form-control @error('editCashflowDescription') is-invalid @enderror" id="editCashflowDescription"
-                            rows="3" wire:model="editCashflowDescription"></textarea>
+
+                    {{-- *** PERUBAHAN: Textarea Deskripsi diganti Trix Editor *** --}}
+                    <div class="mb-3"
+                        wire:ignore
+                        {{-- Inisialisasi AlpineJS dan binding ke Livewire --}}
+                        x-data="{
+                            content: @entangle('editCashflowDescription'),
+                            init() {
+                                let editor = this.$refs.trixEditorEdit;
+                                
+                                // 1. Set nilai Trix saat modal dibuka (dari data yang di-load)
+                                if (editor.editor) {
+                                    editor.editor.loadHTML(this.content || '');
+                                } else {
+                                    // Fallback jika Trix belum siap
+                                    editor.addEventListener('trix-initialize', () => {
+                                        editor.editor.loadHTML(this.content || '');
+                                    });
+                                }
+                                
+                                // 2. Update properti Livewire (content) saat Trix diubah
+                                editor.addEventListener('trix-change', () => {
+                                    this.content = editor.value;
+                                });
+
+                                // 3. Pantau 'content'. Jika Livewire mengubahnya (cth: saat modal dibuka lagi), update Trix
+                                this.$watch('content', (newValue) => {
+                                    if (newValue !== editor.value) {
+                                        editor.editor.loadHTML(newValue || '');
+                                    }
+                                });
+                            }
+                        }"
+                    >
+                        <label for="editCashflowDescription_input" class="form-label">Deskripsi</label>
+                        
+                        {{-- Input 'hidden' ini diperlukan Trix. ID harus unik dan cocok dengan 'input' di trix-editor --}}
+                        <input id="editCashflowDescription_input" type="hidden">
+                        
+                        {{-- Trix Editor --}}
+                        <trix-editor
+                            x-ref="trixEditorEdit"
+                            input="editCashflowDescription_input"
+                            class="form-control @error('editCashflowDescription') is-invalid @enderror">
+                        </trix-editor>
+                        
+                        {{-- Tampilkan error (jika ada) --}}
                         @error('editCashflowDescription')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="text-danger mt-1">{{ $message }}</div>
                         @enderror
                     </div>
+                    {{-- *** END PERUBAHAN *** --}}
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>

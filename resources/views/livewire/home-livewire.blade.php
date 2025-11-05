@@ -162,10 +162,15 @@
                                 Rp {{ number_format($cashflow->nominal, 0, ',', '.') }}
                             </p>
                             
-                            {{-- Keterangan Singkat (Truncated) --}}
+                            {{-- 
+                              ===========================================================
+                              *** INI PERBAIKANNYA ***
+                              Kita gabungkan strip_tags, html_entity_decode, dan trim
+                              ===========================================================
+                            --}}
                             <p class="card-text text-muted small mb-3 text-truncate">
-                                {{ $cashflow->description ?: 'Tidak ada deskripsi transaksi.' }}
-                            </p> {{-- <-- PERBAIKAN DI SINI: </label> diubah menjadi </p> --}}
+                                {{ $cashflow->description ? \Illuminate\Support\Str::limit(trim(html_entity_decode(strip_tags($cashflow->description))), 100) : 'Tidak ada deskripsi transaksi.' }}
+                            </p>
                             
                             {{-- Tanggal Pembuatan dan Perubahan --}}
                             <div class="small text-end text-secondary mb-3 pt-2 border-top">

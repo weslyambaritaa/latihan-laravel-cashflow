@@ -10,8 +10,8 @@
             <form wire:submit.prevent="deleteCashflow">
                 <div class="modal-body">
                     <p>
-                        Anda yakin ingin menghapus Cashflow **<span
-                                class="fw-bold">{{ $deleteCashflowTitle ?? '...' }}</span>**?
+                        Anda yakin ingin menghapus Cashflow <span
+                                class="fw-bold">{{ $deleteCashflowTitle ?? '...' }}</span>?
                         Tindakan ini tidak dapat dibatalkan.
                     </p>
                     <p class="text-danger">

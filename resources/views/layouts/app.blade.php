@@ -14,7 +14,28 @@
     {{-- TAMBAHAN: CDN ApexCharts --}}
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
+    {{-- *** PERUBAHAN: Aset Trix Editor (CSS & JS) *** --}}
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
+    <script type_5"text/javascript" src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
+    {{-- *** END PERUBAHAN *** --}}
+
     @livewireStyles
+
+    {{-- Opsional: Style untuk Trix agar rapi di Bootstrap --}}
+    <style>
+        /* Sembunyikan tombol upload file bawaan Trix jika tidak diperlukan */
+        /* .trix-button-group--file-tools { display: none; } */
+
+        /* Atur tinggi Trix Editor agar konsisten */
+        trix-editor {
+            min-height: 150px;
+        }
+        
+        /* Fix untuk Bootstrap 5 */
+        .trix-content {
+            background-color: white;
+        }
+    </style>
 </head>
 
 <body>

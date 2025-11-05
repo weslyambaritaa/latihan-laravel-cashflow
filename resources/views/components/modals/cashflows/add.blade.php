@@ -39,14 +39,57 @@
                         @enderror
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Deskripsi</label>
-                        {{-- Textarea Deskripsi (SUDAH BENAR) --}}
-                        <textarea class="form-control" rows="4" wire:model="addCashflowDescription"></textarea>
+                    {{-- *** PERUBAHAN: Textarea Deskripsi diganti Trix Editor *** --}}
+                    <div class="mb-3"
+                        wire:ignore
+                        {{-- Inisialisasi AlpineJS dan binding ke Livewire --}}
+                        x-data="{
+                            content: @entangle('addCashflowDescription'),
+                            init() {
+                                let editor = this.$refs.trixEditorAdd;
+
+                                // 1. Set nilai Trix saat modal dibuka (biasanya kosong)
+                                if (editor.editor) {
+                                    editor.editor.loadHTML(this.content || '');
+                                } else {
+                                    // Fallback jika Trix belum siap
+                                    editor.addEventListener('trix-initialize', () => {
+                                        editor.editor.loadHTML(this.content || '');
+                                    });
+                                }
+                                
+                                // 2. Update properti Livewire (content) saat Trix diubah
+                                editor.addEventListener('trix-change', () => {
+                                    this.content = editor.value;
+                                });
+
+                                // 3. Pantau 'content'. Jika Livewire meresetnya (cth: setelah simpan), update Trix
+                                this.$watch('content', (newValue) => {
+                                    if (newValue !== editor.value) {
+                                        editor.editor.loadHTML(newValue || '');
+                                    }
+                                });
+                            }
+                        }"
+                    >
+                        <label class="form-label" for="addCashflowDescription_input">Deskripsi</label>
+                        
+                        {{-- Input 'hidden' ini diperlukan Trix. ID harus unik dan cocok dengan 'input' di trix-editor --}}
+                        <input id="addCashflowDescription_input" type="hidden">
+                        
+                        {{-- Trix Editor --}}
+                        <trix-editor
+                            x-ref="trixEditorAdd"
+                            input="addCashflowDescription_input"
+                            class="form-control @error('addCashflowDescription') is-invalid @enderror">
+                        </trix-editor>
+                        
+                        {{-- Tampilkan error (jika ada) --}}
                         @error('addCashflowDescription')
-                            <span class="text-danger">{{ $message }}</span>
+                            <span class="text-danger mt-1">{{ $message }}</span>
                         @enderror
                     </div>
+                    {{-- *** END PERUBAHAN *** --}}
 
                     {{-- TAMBAHAN: Input file untuk cover --}}
                     <div class="mb-3">
