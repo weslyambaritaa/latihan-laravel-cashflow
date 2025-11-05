@@ -24,7 +24,7 @@ class HomeLivewire extends Component
     public $addCashflowTipe = 'pemasukan'; // Default
     public $addCashflowNominal;
     public $addCashflowDescription;
-    public $addCashflowFile;
+    // public $addCashflowFile; // <-- DIHAPUS
 
     // Properti untuk Modal Edit
     public $editCashflowId;
@@ -124,6 +124,7 @@ class HomeLivewire extends Component
             $cashflowsQuery->where('title', 'like', '%' . $this->search . '%');
         }
         
+        // Menggunakan 20 untuk pagination
         $cashflows = $cashflowsQuery->paginate(20);
         
         return view('livewire.home-livewire', [
@@ -138,13 +139,14 @@ class HomeLivewire extends Component
     // --- Logika Tambah Data ---
     public function initAddModal()
     {
+        // Reset properti untuk memastikan form tambah bersih
         $this->reset([
             'addCashflowTitle', 
             'addCashflowNominal', 
             'addCashflowDescription', 
-            'addCashflowFile'
+            // 'addCashflowFile' // <-- DIHAPUS
         ]);
-        $this->addCashflowTipe = 'pemasukan';
+        $this->addCashflowTipe = 'pemasukan'; // Set default
         
         $this->dispatch('openModal', id: 'addCashflowModal');
     }
@@ -156,7 +158,7 @@ class HomeLivewire extends Component
             'addCashflowTipe' => 'required|in:pemasukan,pengeluaran',
             'addCashflowNominal' => 'required|integer|min:1',
             'addCashflowDescription' => 'nullable|string',
-            'addCashflowFile' => 'nullable|image|max:2048',
+            // 'addCashflowFile' => 'nullable|image|max:2048', // <-- DIHAPUS
         ]);
 
         $cashflow = new Cashflow();
@@ -166,34 +168,29 @@ class HomeLivewire extends Component
         $cashflow->nominal = $validated['addCashflowNominal'];
         $cashflow->description = $validated['addCashflowDescription'];
 
-        if ($this->addCashflowFile) {
-            $userId = Auth::id();
-            $dateNumber = now()->format('YmdHis');
-            $extension = $this->addCashflowFile->getClientOriginalExtension();
-            $filename = $userId . '_' . $dateNumber . '.' . $extension;
-            
-            $path = $this->addCashflowFile->storeAs('covers', $filename, 'public');
-            $cashflow->cover = $path;
-        }
+        // --- BLOK LOGIKA UPLOAD FILE DIHAPUS DARI SINI ---
 
         $cashflow->save();
 
+        // Tutup modal
         $this->dispatch('closeModal', id: 'addCashflowModal');
         
+        // Kirim notifikasi SweetAlert
         $this->dispatch('swal:alert', 
             icon: 'success', 
             title: 'Berhasil', 
             text: 'Data cashflow berhasil ditambahkan.'
         );
 
+        // Reset form
         $this->reset([
             'addCashflowTitle', 
             'addCashflowTipe', 
             'addCashflowNominal', 
             'addCashflowDescription', 
-            'addCashflowFile'
+            // 'addCashflowFile' // <-- DIHAPUS
         ]);
-        $this->addCashflowTipe = 'pemasukan';
+        $this->addCashflowTipe = 'pemasukan'; // Kembalikan ke default
     }
 
 
@@ -203,7 +200,6 @@ class HomeLivewire extends Component
         $cashflow = Cashflow::find($id);
         
         if ($cashflow && $cashflow->user_id == Auth::id()) {
-            // *** INI KODE YANG BENAR (menggunakan ->) ***
             $this->editCashflowId = $cashflow->id;
             $this->editCashflowTitle = $cashflow->title;
             $this->editCashflowTipe = strtolower($cashflow->tipe);
@@ -216,7 +212,6 @@ class HomeLivewire extends Component
 
     public function editCashflow()
     {
-        // *** KODE YANG BENAR (menggunakan ->) ***
         $validated = $this->validate([
             'editCashflowTitle' => 'required|string|max:255',
             'editCashflowTipe' => 'required|in:pemasukan,pengeluaran',
@@ -250,7 +245,6 @@ class HomeLivewire extends Component
         $cashflow = Cashflow::find($id);
         
         if ($cashflow && $cashflow->user_id == Auth::id()) {
-            // *** KODE YANG BENAR (menggunakan ->) ***
             $this->deleteCashflowId = $cashflow->id;
             $this->deleteCashflowTitle = $cashflow->title;
             
@@ -262,7 +256,6 @@ class HomeLivewire extends Component
 
     public function deleteCashflow()
     {
-        // *** KODE YANG BENAR (menggunakan ->) ***
         $cashflow = Cashflow::find($this->deleteCashflowId);
 
         if ($cashflow && $cashflow->user_id == Auth::id()) {

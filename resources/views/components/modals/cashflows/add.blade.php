@@ -80,14 +80,10 @@
                     </div>
                     {{-- End Trix Editor --}}
 
-                    <div class="mb-3">
-                        {{-- PERBAIKAN: Tambahkan 'for' dan 'id' --}}
-                        <label class="form-label" for="addCashflowFile">Cover (Opsional)</label>
-                        <input type="file" class="form-control" id="addCashflowFile" wire:model="addCashflowFile">
-                        @error('addCashflowFile')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
-                    </div>
+                    {{-- 
+                      *** DIHAPUS ***
+                      Blok input file cover telah dihapus dari sini.
+                    --}}
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
